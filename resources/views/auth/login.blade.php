@@ -26,7 +26,7 @@
                 </svg>
             </div>
             <h1 class="mt-6 text-3xl font-extrabold text-white drop-shadow-lg tracking-wide">
-                Gestion de crédits pneumatique Aqali
+                Gestion de crédits pneumatique Aqabli
             </h1>
             <p class="mt-2 text-sm text-gray-200 animate-pulse">
                 Connectez-vous à votre compte administrateur

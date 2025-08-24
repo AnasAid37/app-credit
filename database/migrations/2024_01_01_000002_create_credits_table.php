@@ -13,11 +13,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('client_id')->constrained()->onDelete('cascade');
             $table->decimal('amount', 10, 2);
+            $table->decimal('paid_amount', 10, 2)->default(0);
+            $table->decimal('remaining_amount', 10, 2)->default(0);
             $table->text('reason')->nullable();
             $table->enum('status', ['active', 'paid', 'cancelled'])->default('active');
             $table->foreignId('created_by')->constrained('users');
             $table->timestamps();
-            
+
+            // الفهارس
             $table->index('client_id');
             $table->index('status');
             $table->index('created_at');

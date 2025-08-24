@@ -44,9 +44,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
         'destroy' => 'credits.destroy',
     ]);
     
+    // Route pour ajouter un paiement
+    Route::post('/credits/{credit}/add-payment', [CreditController::class, 'addPayment'])->name('credits.add-payment');
+
+    // Recherche et export
     Route::get('/credits-search', [CreditController::class, 'search'])->name('credits.search');
     Route::get('/credits-export', [CreditController::class, 'export'])->name('credits.export');
     
+    // Routes API pour stats
     Route::prefix('api')->group(function () {
         Route::get('/stats/monthly', [DashboardController::class, 'getMonthlyStats'])->name('api.stats.monthly');
         Route::get('/stats/overview', [DashboardController::class, 'getOverviewStats'])->name('api.stats.overview');
@@ -55,7 +60,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
 // Route de fallback pour les 404
 Route::fallback(function () {
-    if (auth()->check()) { // تصحيح auth::check() إلى auth()->check()
+    if (auth()->check()) { 
         return redirect()->route('dashboard')->with('error', 'Page non trouvée');
     }
     return redirect()->route('login.form')->with('error', 'Page non trouvée');

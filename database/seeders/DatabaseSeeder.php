@@ -14,15 +14,17 @@ class DatabaseSeeder extends Seeder
 {
     public function run()
     {
-        // Créer un admin par défaut
-        $admin = User::create([
-            'name' => 'Administrateur',
-            'email' => 'admin@credit.ma',
-            'password' => Hash::make('password123'),
-            'role' => 'admin'
-        ]);
+        // ✅ Créer ou mettre à jour l'admin par défaut
+        $admin = User::updateOrCreate(
+            ['email' => 'admin@credit.ma'],
+            [
+                'name' => 'Administrateur',
+                'password' => Hash::make('password123'),
+                'role' => 'admin'
+            ]
+        );
 
-        // Créer quelques clients de test (optionnel)
+        // ✅ Créer quelques clients de test (seulement en local)
         if (app()->environment('local')) {
             $clients = [
                 ['name' => 'Ahmed Alami', 'phone' => '0612345678', 'address' => 'Casablanca, Maroc'],
@@ -34,14 +36,19 @@ class DatabaseSeeder extends Seeder
 
             foreach ($clients as $clientData) {
                 $client = Client::create($clientData);
-                
-                // Créer des crédits de test
+
+                // ✅ Créer un crédit de test pour chaque client
+                $amount = rand(1000, 50000);
+                $paid   = rand(0, $amount); // payé aléatoirement
+
                 Credit::create([
-                    'client_id' => $client->id,
-                    'amount' => rand(1000, 50000),
-                    'reason' => 'Crédit de test',
-                    'status' => ['active', 'paid', 'cancelled'][rand(0, 2)],
-                    'created_by' => $admin->id
+                    'client_id'        => $client->id,
+                    'amount'           => $amount,
+                    'paid_amount'      => $paid,
+                    'remaining_amount' => $amount - $paid,
+                    'reason'           => 'Crédit de test',
+                    'status'           => ['active', 'paid', 'cancelled'][rand(0, 2)],
+                    'created_by'       => $admin->id,
                 ]);
             }
         }

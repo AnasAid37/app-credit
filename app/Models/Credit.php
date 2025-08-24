@@ -17,14 +17,22 @@ class Credit extends Model
         'amount',
         'reason',
         'status',
-        'created_by'
+        'created_by',
+        'paid_amount',
+        'remaining_amount'
     ];
+
 
     protected $casts = [
         'amount' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+    protected $attributes = [
+    'paid_amount' => 0,
+    'remaining_amount' => 0,
+];
+
 
     public function client(): BelongsTo
     {
@@ -48,7 +56,7 @@ class Credit extends Model
 
     public function getStatusLabelAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'active' => 'Actif',
             'paid' => 'Payé',
             'cancelled' => 'Annulé',
@@ -58,7 +66,7 @@ class Credit extends Model
 
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'active' => 'yellow',
             'paid' => 'green',
             'cancelled' => 'red',
@@ -94,7 +102,7 @@ class Credit extends Model
     public function scopeThisMonth($query)
     {
         return $query->whereMonth('created_at', now()->month)
-                    ->whereYear('created_at', now()->year);
+            ->whereYear('created_at', now()->year);
     }
 
     public function scopeThisYear($query)
@@ -102,4 +110,3 @@ class Credit extends Model
         return $query->whereYear('created_at', now()->year);
     }
 }
-
