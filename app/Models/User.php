@@ -1,19 +1,17 @@
 <?php
-// app/Models/User.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name',
+        'nom',
         'email',
         'password',
         'role'
@@ -24,18 +22,21 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-    ];
-
-    public function credits(): HasMany
+    protected function casts(): array
     {
-        return $this->hasMany(Credit::class, 'created_by');
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
     }
 
-    public function isAdmin(): bool
+    public function isAdmin()
     {
         return $this->role === 'admin';
+    }
+
+    public function sorties()
+    {
+        return $this->hasMany(Sortie::class);
     }
 }

@@ -1,0 +1,28 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\User;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+
+class UserSeeder extends Seeder
+{
+    public function run()
+    {
+        User::create([
+            'nom' => 'Administrateur',
+            'email' => 'admin@example.com',
+            'password' => Hash::make('password'),
+            'role' => 'admin'
+        ]);
+
+        // يمكنك إضافة مستخدمين إضافيين إذا أردت
+        User::create([
+            'nom' => 'Utilisateur Test',
+            'email' => 'user@example.com',
+            'password' => Hash::make('password'),
+            'role' => 'user'
+        ]);
+    }
+}

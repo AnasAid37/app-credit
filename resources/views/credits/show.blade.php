@@ -35,6 +35,7 @@
                         <label class="block text-sm font-medium text-gray-500">Montant payé</label>
                         <p class="text-xl font-bold text-blue-600">{{ number_format($credit->paid_amount, 2) }} DH</p>
                     </div>
+                    
 
                     <div>
                         <label class="block text-sm font-medium text-gray-500">Montant restant</label>
