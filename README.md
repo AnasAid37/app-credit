@@ -69,5 +69,5 @@ Pneumatique Aqabli est un système de gestion intégré spécialement conçu pou
 
 1. **Cloner le projet**
 ```bash
-git clone https://github.com/votre-username/pneumatique-aqabli.git
+git clone https://github.com/AnasAid37/app-credit.git
 cd pneumatique-aqabli
