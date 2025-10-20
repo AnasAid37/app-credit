@@ -1,61 +1,73 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🏪 Pneumatique Aqabli - Système de Gestion Intégré
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+<div align="center">
 
-## About Laravel
+![Laravel](https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**Système complet de gestion de stock et crédits pour magasins de pneumatiques**
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+[Fonctionnalités](#-fonctionnalités) • [Installation](#-installation) • [Utilisation](#-utilisation) • [Déploiement](#-déploiement)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+</div>
 
-## Learning Laravel
+## 📋 Aperçu
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Pneumatique Aqabli est un système de gestion intégré spécialement conçu pour les magasins de vente de pneumatiques et services associés. Le système combine une gestion de stock intelligente et un système de crédits avancé dans une seule plateforme.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 🎯 Objectif du Projet
+- Gestion complète du stock de pneumatiques et produits associés
+- Suivi des crédits et clients
+- Alertes intelligentes pour stock faible
+- Rapports et statistiques détaillés
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## ✨ Fonctionnalités
 
-## Laravel Sponsors
+### 🏗️ Gestion de Stock
+- 📊 Tableau de bord complet avec statistiques en temps réel
+- 📦 Gestion complète des produits (ajout, modification, suppression)
+- 🔔 Système d'alertes pour stock faible et épuisé
+- 📝 Enregistrement des mouvements de stock (entrée/sortie)
+- 🏷️ Classification des produits par marque et dimension
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 💳 Gestion des Crédits
+- 👥 Gestion des clients et données personnelles
+- 💰 Système de crédit intégré
+- 📈 Suivi des paiements et soldes
+- 📋 Rapports de crédits et statistiques
+- 📤 Export des données en format CSV
 
-### Premium Partners
+### 🎨 Interface Utilisateur
+- 🎯 Design moderne et responsive
+- 📱 Compatible avec tous les appareils
+- ⚡ Interface utilisateur fluide et rapide
+- 🎨 Couleurs personnalisées et design unique
+- 🔍 Recherche avancée et filtres intelligents
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## 🛠️ Technologies Utilisées
 
-## Contributing
+| Technologie | Utilisation |
+|-------------|-------------|
+| **Laravel 10** | Framework principal |
+| **Bootstrap 5** | Design d'interface |
+| **MySQL** | Base de données |
+| **JavaScript** | Interactivité de l'interface |
+| **Chart.js** | Graphiques et statistiques |
+| **Font Awesome** | Icônes |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 📦 Installation
 
-## Code of Conduct
+### Prérequis
+- PHP 8.1 ou supérieur
+- Composer
+- MySQL 5.7 ou supérieur
+- Node.js (optionnel pour le frontend)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Étapes d'Installation
 
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+1. **Cloner le projet**
+```bash
+git clone https://github.com/votre-username/pneumatique-aqabli.git
+cd pneumatique-aqabli
