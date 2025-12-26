@@ -14,7 +14,7 @@
                     <table class="table table-bordered">
                         <tr>
                             <th>Prix:</th>
-                            <td>{{ number_format($product->price, 2) }} €</td>
+                            <td>{{ number_format($product->price, 2) }} DH</td>
                         </tr>
                         <tr>
                             <th>Taille:</th>

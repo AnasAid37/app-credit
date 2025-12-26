@@ -53,8 +53,14 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // Données mensuelles pour les graphiques
-        $monthlyData = Credit::selectRaw('MONTH(created_at) as month, COUNT(*) as count, SUM(amount) as total')
+        // Données mensuelles pour les graphiques - مع إضافة المبلغ المتبقي
+        $monthlyData = Credit::selectRaw('
+                MONTH(created_at) as month, 
+                COUNT(*) as count, 
+                SUM(amount) as total,
+                SUM(paid_amount) as paid,
+                SUM(remaining_amount) as remaining
+            ')
             ->whereYear('created_at', date('Y'))
             ->groupBy('month')
             ->orderBy('month')
@@ -77,7 +83,9 @@ class DashboardController extends Controller
                 return [
                     'month' => $monthNames[$item->month],
                     'count' => $item->count,
-                    'total' => $item->total
+                    'total' => $item->total,
+                    'paid' => $item->paid,
+                    'remaining' => $item->remaining
                 ];
             });
 

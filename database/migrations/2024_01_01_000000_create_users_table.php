@@ -1,7 +1,5 @@
 <?php
 
-// database/migrations/2024_01_01_000000_create_users_table.php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,11 +10,11 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 100);
+            $table->string('nom', 100); // تغيير من 'name' إلى 'nom'
             $table->string('email', 100)->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['admin'])->default('admin');
+            $table->string('telephone', 20)->nullable(); // إضافة رقم الهاتف
             $table->rememberToken();
             $table->timestamps();
         });
