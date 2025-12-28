@@ -206,9 +206,21 @@
                                 value="{{ old('email') }}" required autofocus placeholder="votre@email.com">
                         </div>
 
-                        <div class="mb-3">
+                        <div class="mb-3 position-relative">
                             <label for="password" class="form-label">Mot de passe</label>
                             <input type="password" class="form-control" id="password" name="password" required placeholder="Votre mot de passe">
+                            <i 
+        id="eyeIcon"
+        class="fa fa-eye"
+        onclick="togglePassword()"
+        style="
+            position: absolute;
+            top: 65%;
+            right: 12px;
+            transform: translateY(-50%);
+            cursor: pointer;
+        "
+    ></i>
                         </div>
 
                         <div class="d-grid">
@@ -234,6 +246,20 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function togglePassword() {
+    const input = document.getElementById("password");
+    const icon = document.getElementById("eyeIcon");
+
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
+    } else {
+        input.type = "password";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
+    }
+}
         document.addEventListener('DOMContentLoaded', function() {
             const video = document.querySelector('.video-background');
             if (window.innerWidth <= 768) {

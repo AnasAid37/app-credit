@@ -467,6 +467,7 @@
                 <i class="fas fa-file-excel"></i> Exporter
             </button>
             @endif
+            
         </div>
 
         @if($sorties->isEmpty())

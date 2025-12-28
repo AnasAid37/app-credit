@@ -1,73 +1,169 @@
-# 🏪 Pneumatique Aqabli - Système de Gestion Intégré
+# 💼 Application de Gestion de Stock et Crédit
 
-<div align="center">
+Application Laravel simple et efficace pour gérer les stocks et les dettes avec système d'abonnement manuel.
 
-![Laravel](https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white)
-![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)
+---
 
-**Système complet de gestion de stock et crédits pour magasins de pneumatiques**
+## 🌟 Fonctionnalités
 
-[Fonctionnalités](#-fonctionnalités) • [Installation](#-installation) • [Utilisation](#-utilisation) • [Déploiement](#-déploiement)
+### Pour les utilisateurs :
+- ✅ Gestion complète des produits (CRUD)
+- ✅ Suivi des mouvements de stock
+- ✅ Gestion des dettes (crédits) avec suivi des paiements
+- ✅ Tableau de bord avec statistiques détaillées
+- ✅ Alertes automatiques pour stock bas
+- ✅ Rapports exportables
+- ✅ Interface utilisateur facile en français
 
-</div>
+### Pour l'administrateur :
+- 🔧 Tableau de bord simple pour gérer les utilisateurs
+- ⚡ Activation/désactivation des comptes en un clic
+- 📅 Gestion des abonnements (mensuel/à vie)
+- 🔄 Extension facile des abonnements
+- 📊 Visualisation des statistiques utilisateurs
 
-## 📋 Aperçu
+---
 
-Pneumatique Aqabli est un système de gestion intégré spécialement conçu pour les magasins de vente de pneumatiques et services associés. Le système combine une gestion de stock intelligente et un système de crédits avancé dans une seule plateforme.
+## 🚀 Installation rapide
 
-### 🎯 Objectif du Projet
-- Gestion complète du stock de pneumatiques et produits associés
-- Suivi des crédits et clients
-- Alertes intelligentes pour stock faible
-- Rapports et statistiques détaillés
-
-## ✨ Fonctionnalités
-
-### 🏗️ Gestion de Stock
-- 📊 Tableau de bord complet avec statistiques en temps réel
-- 📦 Gestion complète des produits (ajout, modification, suppression)
-- 🔔 Système d'alertes pour stock faible et épuisé
-- 📝 Enregistrement des mouvements de stock (entrée/sortie)
-- 🏷️ Classification des produits par marque et dimension
-
-### 💳 Gestion des Crédits
-- 👥 Gestion des clients et données personnelles
-- 💰 Système de crédit intégré
-- 📈 Suivi des paiements et soldes
-- 📋 Rapports de crédits et statistiques
-- 📤 Export des données en format CSV
-
-### 🎨 Interface Utilisateur
-- 🎯 Design moderne et responsive
-- 📱 Compatible avec tous les appareils
-- ⚡ Interface utilisateur fluide et rapide
-- 🎨 Couleurs personnalisées et design unique
-- 🔍 Recherche avancée et filtres intelligents
-
-## 🛠️ Technologies Utilisées
-
-| Technologie | Utilisation |
-|-------------|-------------|
-| **Laravel 10** | Framework principal |
-| **Bootstrap 5** | Design d'interface |
-| **MySQL** | Base de données |
-| **JavaScript** | Interactivité de l'interface |
-| **Chart.js** | Graphiques et statistiques |
-| **Font Awesome** | Icônes |
-
-## 📦 Installation
-
-### Prérequis
-- PHP 8.1 ou supérieur
-- Composer
-- MySQL 5.7 ou supérieur
-- Node.js (optionnel pour le frontend)
-
-### Étapes d'Installation
-
-1. **Cloner le projet**
 ```bash
+# 1. Cloner le projet
 git clone https://github.com/AnasAid37/app-credit.git
-cd pneumatique-aqabli
+cd credit-app
+
+# 2. Installer les dépendances
+composer install
+
+# 3. Copier le fichier d'environnement
+cp .env.example .env
+
+# 4. Générer la clé d'application
+php artisan key:generate
+
+# 5. Configurer la base de données dans .env
+# DB_DATABASE=credit_app
+# DB_USERNAME=root
+# DB_PASSWORD=
+
+# 6. Exécuter les migrations
+php artisan migrate
+
+# 7. Lancer le serveur
+php artisan serve
+```
+
+---
+
+## 👤 Créer un compte administrateur
+
+```bash
+php artisan tinker
+```
+
+```php
+User::create([
+    'nom' => 'Admin',
+    'email' => 'admin@admin.com',
+    'password' => bcrypt('password'),
+    'is_admin' => true,
+    'is_active' => true,
+]);
+```
+
+---
+
+## 📖 Mode d'emploi
+
+### Pour l'administrateur :
+1. Connectez-vous : `/login`
+2. Allez sur : `/admin`
+3. Activez les utilisateurs et choisissez le type d'abonnement
+
+### Pour les utilisateurs :
+1. Créez un compte : `/register`
+2. Attendez l'activation par l'administrateur
+3. Après activation, connectez-vous et profitez de toutes les fonctionnalités !
+
+---
+
+## 🔒 Système d'abonnement
+
+### Mensuel :
+- Durée limitée en mois
+- Nécessite un renouvellement
+- Adapté pour les abonnements périodiques
+
+### À vie :
+- Pas de date d'expiration
+- Paiement unique
+- Accès permanent
+
+---
+
+## 🛠️ Technologies utilisées
+
+- Laravel 12.x
+- PHP 8.2+
+- MySQL
+- Bootstrap 5
+- jQuery
+
+---
+
+## 📁 Structure
+
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   │   ├── AdminController.php       # Gestion des utilisateurs
+│   │   ├── SubscribeController.php   # Page d'abonnement
+│   │   ├── ProductController.php     # Gestion des produits
+│   │   └── CreditController.php      # Gestion des dettes
+│   └── Middleware/
+│       └── CheckAccess.php           # Vérification d'abonnement
+├── Models/
+│   └── User.php                      # Modèle utilisateur
+resources/
+├── views/
+│   ├── admin/
+│   │   └── index.blade.php          # Tableau de bord admin
+│   └── subscribe.blade.php          # Page d'abonnement
+routes/
+└── web.php                          # Routes principales
+```
+
+---
+
+## 🔐 Sécurité
+
+- ✅ Middleware protégé pour vérifier l'abonnement
+- ✅ Séparation des permissions Admin/User
+- ✅ Protection CSRF automatique
+- ✅ Chiffrement des mots de passe
+- ✅ Validation complète
+
+---
+
+## 📞 Support
+
+Pour aide ou questions :
+- WhatsApp : 0605816821
+- GitHub Issues : https://github.com/AnasAid37/app-credit
+
+---
+
+## 📄 Licence
+
+Licence MIT - Open Source
+
+---
+
+## 🙏 Remerciements
+
+Développé par [votre nom]
+Pour usage commercial et personnel
+
+---
+
+**Bon succès ! 🚀**

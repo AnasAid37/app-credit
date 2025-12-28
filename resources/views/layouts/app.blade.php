@@ -13,7 +13,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+        rel="stylesheet" />
 
     <style>
         :root {
@@ -281,6 +282,48 @@
             box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
         }
 
+        /* Enhanced Alert Styles */
+        .alert {
+            border-left: 4px solid;
+            animation: slideInRight 0.4s ease-out;
+        }
+
+        .alert-success {
+            border-left-color: var(--success-color);
+            background-color: #d1f2eb;
+            color: #0c5d46;
+        }
+
+        .alert-info {
+            border-left-color: var(--info-color);
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .alert-warning {
+            border-left-color: var(--warning-color);
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .alert-danger {
+            border-left-color: var(--danger-color);
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
         /* Form Controls */
         .form-control,
         .form-select {
@@ -365,8 +408,7 @@
 
         .footer-content {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            justify-content: center;
             flex-wrap: wrap;
             gap: 1.5rem;
         }
@@ -635,7 +677,8 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <img src="{{ asset('images/logo.png') }}" alt="Logo" class="navbar-logo" onerror="this.style.display='none'">
+            <img src="{{ asset('images/logo.png') }}" alt="Logo" class="navbar-logo"
+                onerror="this.style.display='none'">
             <a class="navbar-brand fw-bold" href="{{ route('dashboard') }}">
                 <i class="fas fa-tire me-2"></i>Pneumatique Aqabli
                 <small class="d-block">Gestion Complète</small>
@@ -648,37 +691,39 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     @auth
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle fa-lg me-2"></i>
-                            <span class="d-none d-md-inline">{{ auth()->user()->nom ?? auth()->user()->name }}</span>
-                            <span class="badge bg-light text-dark ms-2">{{ auth()->user()->role ?? 'Utilisateur' }}</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item" href="{{ route('profile.show') }}">
-                                    <i class="fas fa-user me-2"></i>Mon Profil
-                                </a>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
+                                data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle fa-lg me-2"></i>
+                                <span class="d-none d-md-inline">{{ auth()->user()->nom ?? auth()->user()->name }}</span>
+                                <span
+                                    class="badge bg-light text-dark ms-2">{{ auth()->user()->role ?? 'Utilisateur' }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('profile.show') }}">
+                                        <i class="fas fa-user me-2"></i>Mon Profil
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
                     @else
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('login') }}">
-                            <i class="fas fa-sign-in-alt me-1"></i>Connexion
-                        </a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('login') }}">
+                                <i class="fas fa-sign-in-alt me-1"></i>Connexion
+                            </a>
+                        </li>
                     @endauth
                 </ul>
             </div>
@@ -686,140 +731,193 @@
     </nav>
 
     @auth
-    <!-- Sidebar -->
-    <nav class="sidebar" id="sidebar">
-        <!-- Desktop Toggle Button -->
-        <div class="sidebar-toggle-desktop d-none d-md-flex" id="sidebarToggleDesktop" title="Réduire/Étendre">
-            <i class="fas fa-chevron-left"></i>
-        </div>
-
-        <div class="sidebar-content">
-            <!-- Module Gestion de Stock -->
-            <div class="module-section">
-                <div class="module-title">
-                    <i class="fas fa-warehouse"></i>
-                    <span>Gestion de Stock</span>
-                </div>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" data-title="Tableau de bord">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Tableau de bord</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('products.index') }}" class="nav-link {{ request()->routeIs('products.*') && !request()->routeIs('products.create') ? 'active' : '' }}" data-title="Liste des stocks">
-                            <i class="fas fa-boxes"></i>
-                            <span>Liste des stocks</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('products.create') }}" class="nav-link {{ request()->routeIs('products.create') ? 'active' : '' }}" data-title="Ajouter un produit">
-                            <i class="fas fa-plus-circle"></i>
-                            <span>Ajouter un produit</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('sorties.create') }}" class="nav-link {{ request()->routeIs('sorties.create') ? 'active' : '' }}" data-title="Sortie de stock">
-                            <i class="fas fa-arrow-circle-down"></i>
-                            <span>Sortie de stock</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('sorties.index') }}" class="nav-link {{ request()->routeIs('sorties.index') ? 'active' : '' }}" data-title="Historique sorties">
-                            <i class="fas fa-history"></i>
-                            <span>Historique sorties</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('alerts.index') }}" id="alertesLink" class="nav-link {{ request()->routeIs('alerts.index') ? 'active' : '' }}" data-title="Alertes">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <span>Alertes</span>
-                        </a>
-                    </li>
-                </ul>
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <!-- Desktop Toggle Button -->
+            <div class="sidebar-toggle-desktop d-none d-md-flex" id="sidebarToggleDesktop" title="Réduire/Étendre">
+                <i class="fas fa-chevron-left"></i>
             </div>
 
-            <!-- Module Gestion de Crédit -->
-            <div class="module-section">
-                <div class="module-title">
-                    <i class="fas fa-hand-holding-usd"></i>
-                    <span>Gestion de Crédit</span>
+            <div class="sidebar-content">
+                <!-- Module Gestion de Stock -->
+                <div class="module-section">
+                    <div class="module-title">
+                        <i class="fas fa-warehouse"></i>
+                        <span>Gestion de Stock</span>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a href="{{ route('dashboard') }}"
+                                class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+                                data-title="Tableau de bord">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Tableau de bord</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('products.index') }}"
+                                class="nav-link {{ request()->routeIs('products.*') && !request()->routeIs('products.create') ? 'active' : '' }}"
+                                data-title="Liste des stocks">
+                                <i class="fas fa-boxes"></i>
+                                <span>Liste des stocks</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('products.create') }}"
+                                class="nav-link {{ request()->routeIs('products.create') ? 'active' : '' }}"
+                                data-title="Ajouter un produit">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>Ajouter un produit</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('sorties.create') }}"
+                                class="nav-link {{ request()->routeIs('sorties.create') ? 'active' : '' }}"
+                                data-title="Sortie de stock">
+                                <i class="fas fa-arrow-circle-down"></i>
+                                <span>Sortie de stock</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('sorties.index') }}"
+                                class="nav-link {{ request()->routeIs('sorties.index') ? 'active' : '' }}"
+                                data-title="Historique sorties">
+                                <i class="fas fa-history"></i>
+                                <span>Historique sorties</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('alerts.index') }}" id="alertesLink"
+                                class="nav-link {{ request()->routeIs('alerts.index') ? 'active' : '' }}"
+                                data-title="Alertes">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>Alertes</span>
+                            </a>
+                        </li>
+                    </ul>
                 </div>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a href="{{ route('credits.index') }}" class="nav-link {{ request()->routeIs('credits.index') ? 'active' : '' }}">
-                            <i class="fas fa-list"></i>
-                            <span>Liste des crédits</span>
+
+                <!-- Module Gestion de Crédit -->
+                <div class="module-section">
+                    <div class="module-title">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <span>Gestion de Crédit</span>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a href="{{ route('credits.index') }}"
+                                class="nav-link {{ request()->routeIs('credits.index') ? 'active' : '' }}">
+                                <i class="fas fa-list"></i>
+                                <span>Liste des crédits</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('credits.create') }}"
+                                class="nav-link {{ request()->routeIs('credits.create') ? 'active' : '' }}">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>Nouveau crédit</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Actions Rapides -->
+                <div class="module-section">
+                    <div class="module-title">
+                        <i class="fas fa-bolt"></i>
+                        <span>Actions Rapides</span>
+                    </div>
+                    <div class="d-grid gap-2 px-2">
+                        <a href="{{ route('credits.create') }}" class="btn btn-success btn-sm">
+                            <i class="fas fa-plus me-1"></i> Nouveau Crédit
                         </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('credits.create') }}" class="nav-link {{ request()->routeIs('credits.create') ? 'active' : '' }}">
-                            <i class="fas fa-plus-circle"></i>
-                            <span>Nouveau crédit</span>
+                        <a href="{{ route('products.create') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-box me-1"></i> Nouveau Produit
                         </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('credits.export') }}" class="nav-link">
-                            <i class="fas fa-file-export"></i>
-                            <span>Exporter CSV</span>
-                        </a>
-                    </li>
-                </ul>
+                    </div>
+                </div>
             </div>
+        </nav>
 
-            <!-- Actions Rapides -->
-            <div class="module-section">
-                <div class="module-title">
-                    <i class="fas fa-bolt"></i>
-                    <span>Actions Rapides</span>
-                </div>
-                <div class="d-grid gap-2 px-2">
-                    <a href="{{ route('credits.create') }}" class="btn btn-success btn-sm">
-                        <i class="fas fa-plus me-1"></i> Nouveau Crédit
-                    </a>
-                    <a href="{{ route('products.create') }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-box me-1"></i> Nouveau Produit
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Sidebar Overlay (Mobile) -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Floating Toggle Button (Mobile) -->
-    <button class="sidebar-toggle-btn" id="sidebarToggleMobile" title="Menu">
-        <i class="fas fa-bars"></i>
-    </button>
+        <!-- Floating Toggle Button (Mobile) -->
+        <button class="sidebar-toggle-btn" id="sidebarToggleMobile" title="Menu">
+            <i class="fas fa-bars"></i>
+        </button>
     @endauth
 
     <!-- Main Content -->
     <main class="main-content" id="mainContent">
         <!-- Messages Flash -->
-        @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle me-2"></i>
-            <strong>Succès!</strong> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle fa-lg me-3"></i>
+                    <div>
+                        <strong>Succès!</strong>
+                        <div>{{ session('success') }}</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         @endif
 
-        @if(session('warning'))
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <strong>Attention!</strong> {{ session('warning') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+        @if (session('info'))
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-info-circle fa-lg me-3"></i>
+                    <div>
+                        <strong>Information</strong>
+                        <div>{{ session('info') }}</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         @endif
 
-        @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-times-circle me-2"></i>
-            <strong>Erreur!</strong> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+        @if (session('warning'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-lg me-3"></i>
+                    <div>
+                        <strong>Attention!</strong>
+                        <div>{{ session('warning') }}</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-times-circle fa-lg me-3"></i>
+                    <div>
+                        <strong>Erreur!</strong>
+                        <div>{{ session('error') }}</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-exclamation-circle fa-lg me-3 mt-1"></i>
+                    <div>
+                        <strong>Erreurs de validation:</strong>
+                        <ul class="mb-0 mt-2">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         @endif
 
         <!-- Contenu Principal -->
@@ -848,15 +946,15 @@
                     <a href="https://www.instagram.com/anas_ajd37" target="_blank" title="Instagram">
                         <i class="fab fa-instagram"></i>
                     </a>
-                    <a href="#" title="Facebook">
+                    <a href="https://www.facebook.com/profile.php?id=100008391759217" title="Facebook">
                         <i class="fab fa-facebook"></i>
                     </a>
-                    <a href="#" title="WhatsApp">
+                    <a href="https://wa.me/212605816821" title="WhatsApp">
                         <i class="fab fa-whatsapp"></i>
                     </a>
                 </div>
                 <div class="footer-credits">
-                    &copy; {{ date('Y') }} Pneumatique Aqabli - Tous droits réservés |
+                    &copy; {{ date('Y') }}  - Tous droits réservés |
                     Créé par <a href="https://www.instagram.com/anas_ajd37" target="_blank">Anas Ait Daoud</a>
                 </div>
             </div>
@@ -1034,7 +1132,7 @@
 
         function updateAlertCount() {
             $.ajax({
-                url: '{{ route("alerts.count") }}',
+                url: '{{ route('alerts.count') }}',
                 type: 'GET',
                 dataType: 'json',
                 success: function(response) {
@@ -1043,7 +1141,8 @@
                         if (alertLink.length) {
                             alertLink.text('Alertes (' + response.count + ')');
                         } else {
-                            $('#alertesLink').append(' <span class="badge bg-danger ms-1">' + response.count + '</span>');
+                            $('#alertesLink').append(' <span class="badge bg-danger ms-1">' + response.count +
+                                '</span>');
                         }
                     }
                 },
@@ -1059,4 +1158,3 @@
         });
         @endauth
     </script>
-    

@@ -7,6 +7,8 @@ use App\Models\Client;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 
 class CreditController extends Controller
 {
@@ -19,12 +21,12 @@ class CreditController extends Controller
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->whereHas('client', function($clientQuery) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('client', function ($clientQuery) use ($search) {
                     $clientQuery->where('name', 'LIKE', "%{$search}%")
-                               ->orWhere('phone', 'LIKE', "%{$search}%");
+                        ->orWhere('phone', 'LIKE', "%{$search}%");
                 })
-                ->orWhere('reason', 'LIKE', "%{$search}%");
+                    ->orWhere('reason', 'LIKE', "%{$search}%");
             });
         }
 
@@ -58,25 +60,34 @@ class CreditController extends Controller
         try {
             DB::beginTransaction();
 
-            // Créer ou trouver le client
-            $client = Client::firstOrCreate(
-                ['phone' => $validated['client_phone']],
-                [
-                    'name' => $validated['client_name'],
-                    'address' => $validated['client_address'] ?? null,
-                ]
-            );
+            // ✅ التحقق من وجود العميل بالاسم أولاً
+            $existingClient = Client::where('name', $validated['client_name'])->first();
 
-            // Si le client existe déjà mais le nom est différent, le mettre à jour
-            if ($client->name !== $validated['client_name']) {
-                $client->update(['name' => $validated['client_name']]);
+            if ($existingClient) {
+                // العميل موجود - احصل على آخر كريدي له
+                $latestCredit = Credit::where('client_id', $existingClient->id)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                DB::rollback();
+
+                return redirect()
+                    ->route('credits.show', $latestCredit ? $latestCredit->id : $existingClient->credits()->first()->id)
+                    ->with('info', "Le client '{$validated['client_name']}' existe déjà. Voici ses crédits.");
             }
 
-            // Calculer le montant restant
+            // إنشاء عميل جديد
+            $client = Client::create([
+                'name' => $validated['client_name'],
+                'phone' => $validated['client_phone'] ?? null,
+                'address' => $validated['client_address'] ?? null,
+            ]);
+
+            // حساب المبالغ
             $paidAmount = $validated['paid_amount'] ?? 0;
             $remainingAmount = $validated['amount'] - $paidAmount;
 
-            // Créer le crédit
+            // إنشاء الكريدي
             $credit = Credit::create([
                 'client_id' => $client->id,
                 'amount' => $validated['amount'],
@@ -87,7 +98,7 @@ class CreditController extends Controller
                 'created_by' => auth()->id(),
             ]);
 
-            // Si un paiement initial a été fait, l'enregistrer
+            // إضافة دفعة أولية إذا وجدت
             if ($paidAmount > 0) {
                 Payment::create([
                     'credit_id' => $credit->id,
@@ -100,9 +111,9 @@ class CreditController extends Controller
 
             DB::commit();
 
-            return redirect()->route('credits.index')
+            return redirect()
+                ->route('credits.show', $credit->id)
                 ->with('success', 'Crédit créé avec succès!');
-
         } catch (\Exception $e) {
             DB::rollback();
             return redirect()->back()
@@ -173,7 +184,6 @@ class CreditController extends Controller
 
             return redirect()->route('credits.index')
                 ->with('success', 'Crédit mis à jour avec succès!');
-
         } catch (\Exception $e) {
             DB::rollback();
             return redirect()->back()
@@ -200,40 +210,11 @@ class CreditController extends Controller
 
             return redirect()->route('credits.index')
                 ->with('success', 'Crédit supprimé avec succès!');
-
         } catch (\Exception $e) {
             DB::rollback();
             return redirect()->back()
                 ->with('error', 'Erreur lors de la suppression du crédit: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Recherche AJAX pour les crédits
-     */
-    public function search(Request $request)
-    {
-        $search = $request->get('search', '');
-
-        $credits = Credit::with(['client', 'creator'])
-            ->when($search, function($query) use ($search) {
-                return $query->where(function($q) use ($search) {
-                    $q->whereHas('client', function($clientQuery) use ($search) {
-                        $clientQuery->where('name', 'LIKE', "%{$search}%")
-                                   ->orWhere('phone', 'LIKE', "%{$search}%");
-                    })
-                    ->orWhere('reason', 'LIKE', "%{$search}%");
-                });
-            })
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $html = view('credits.partials.credit-rows', compact('credits'))->render();
-
-        return response()->json([
-            'html' => $html,
-            'count' => $credits->count()
-        ]);
     }
 
     /**
@@ -271,13 +252,138 @@ class CreditController extends Controller
             DB::commit();
 
             return redirect()->back()->with('success', 'Paiement ajouté avec succès!');
-
         } catch (\Exception $e) {
             DB::rollback();
             return redirect()->back()->with('error', 'Erreur lors de l\'ajout du paiement: ' . $e->getMessage());
         }
     }
+    public function bulkDelete(Request $request)
+    {
+        try {
+            // التحقق من صحة البيانات
+            $validated = $request->validate([
+                'ids' => 'required|array|min:1',
+                'ids.*' => 'required|integer|exists:credits,id'
+            ]);
 
+            $ids = $validated['ids'];
+
+            // استخدام transaction لضمان سلامة البيانات
+            DB::beginTransaction();
+
+            try {
+                // حذف الكريديات
+                $count = Credit::whereIn('id', $ids)->delete();
+
+                // يمكنك إضافة لوج للعملية
+                Log::info('Bulk delete credits', [
+                    'count' => $count,
+                    'ids' => $ids,
+                    'user_id' => auth()->id()
+                ]);
+
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'count' => $count,
+                    'message' => "$count crédit(s) supprimé(s) avec succès"
+                ], 200);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données invalides',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Bulk delete error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * البحث في الكريديات (AJAX)
+     */
+    public function search(Request $request)
+    {
+        try {
+            $search = $request->input('search', '');
+
+            $credits = Credit::with('client')
+                ->when($search, function ($query) use ($search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('client_name', 'like', "%{$search}%")
+                            ->orWhere('client_phone', 'like', "%{$search}%")
+                            ->orWhere('reason', 'like', "%{$search}%")
+                            ->orWhereHas('client', function ($clientQuery) use ($search) {
+                                $clientQuery->where('name', 'like', "%{$search}%")
+                                    ->orWhere('phone', 'like', "%{$search}%");
+                            });
+                    });
+                })
+                ->orderBy('created_at', 'desc')
+                ->paginate(15);
+
+            $html = view('credits.partials.credit-rows', ['credits' => $credits])->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'count' => $credits->total()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Search error', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la recherche'
+            ], 500);
+        }
+    }
+    public function downloadTemplate()
+    {
+        $fileName = 'credits_template.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$fileName\"",
+        ];
+
+        $callback = function () {
+            $file = fopen('php://output', 'w');
+
+            // En-têtes CSV
+            fputcsv($file, [
+                'ID',
+                'Client',
+                'Téléphone',
+                'Montant Total',
+                'Montant Payé',
+                'Montant Restant',
+                'Statut',
+                'Raison',
+                'Date de Création',
+                'Créé par'
+            ]);
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
     /**
      * Exporter les crédits en CSV
      */
@@ -294,9 +400,9 @@ class CreditController extends Controller
             'Content-Disposition' => "attachment; filename=\"$fileName\"",
         ];
 
-        $callback = function() use ($credits) {
+        $callback = function () use ($credits) {
             $file = fopen('php://output', 'w');
-            
+
             // En-têtes CSV
             fputcsv($file, [
                 'ID',
@@ -331,5 +437,181 @@ class CreditController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+    public function showImport()
+    {
+        return view('credits.import');
+    }
+
+    /**
+     * Importer depuis CSV
+     */
+    /**
+     * Importer depuis CSV - متطابق مع Export
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:5120',
+        ], [
+            'file.required' => 'Veuillez sélectionner un fichier',
+            'file.mimes' => 'Le fichier doit être au format CSV',
+            'file.max' => 'Le fichier ne doit pas dépasser 5 Mo'
+        ]);
+
+        try {
+            $file = $request->file('file');
+            $path = $file->getRealPath();
+
+            // Lire le fichier avec encoding UTF-8
+            $content = file_get_contents($path);
+            $content = mb_convert_encoding($content, 'UTF-8', 'UTF-8');
+            $lines = explode("\n", $content);
+
+            $data = array_map(function ($line) {
+                return str_getcsv($line);
+            }, $lines);
+
+            // Supprimer le header (première ligne)
+            $header = array_shift($data);
+
+            // التحقق من أن الـ header صحيح
+            $expectedHeaders = ['ID', 'Client', 'Téléphone', 'Montant Total', 'Montant Payé', 'Montant Restant', 'Statut', 'Raison', 'Date de Création', 'Créé par'];
+
+            $imported = 0;
+            $errors = [];
+
+            DB::beginTransaction();
+
+            try {
+                foreach ($data as $index => $row) {
+                    $lineNumber = $index + 2;
+
+                    // Ignorer les lignes vides
+                    if (empty(array_filter($row))) continue;
+
+                    try {
+                        // ✅ Extraire les données selon ترتيب Export
+                        // [0] = ID (on ignore car auto-increment)
+                        $clientName = trim($row[1] ?? '');           // Client
+                        $phone = trim($row[2] ?? '');                // Téléphone
+                        $montantTotal = (float) str_replace(',', '.', trim($row[3] ?? '0'));  // Montant Total
+                        $montantPaye = (float) str_replace(',', '.', trim($row[4] ?? '0'));   // Montant Payé
+                        // [5] = Montant Restant (calculé automatiquement)
+                        $status = trim($row[6] ?? 'active');         // Statut
+                        $raison = trim($row[7] ?? '');               // Raison
+                        // [8] = Date (on ignore, sera créé automatiquement)
+                        // [9] = Créé par (on ignore, sera auth()->id())
+
+                        // ✅ Validation
+                        if (empty($clientName)) {
+                            $errors[] = "Ligne {$lineNumber}: Nom du client requis";
+                            continue;
+                        }
+
+                        if ($montantTotal <= 0) {
+                            $errors[] = "Ligne {$lineNumber}: Le montant doit être supérieur à 0";
+                            continue;
+                        }
+
+                        if ($montantPaye > $montantTotal) {
+                            $errors[] = "Ligne {$lineNumber}: Le montant payé ne peut pas dépasser le montant total";
+                            continue;
+                        }
+
+                        // Validation du statut
+                        if (!in_array($status, ['active', 'paid', 'cancelled'])) {
+                            $status = 'active';
+                        }
+
+                        // ✅ Nettoyer le téléphone
+                        $phone = $phone === 'N/A' ? null : $phone;
+
+                        // ✅ Créer ou récupérer le client
+                        $client = Client::firstOrCreate(
+                            [
+                                'phone' => $phone,
+                                'user_id' => auth()->id()
+                            ],
+                            [
+                                'name' => $clientName,
+                            ]
+                        );
+
+                        // Si le client existe avec un téléphone différent, on cherche par nom
+                        if (!$phone && !$client->wasRecentlyCreated) {
+                            $client = Client::firstOrCreate(
+                                [
+                                    'name' => $clientName,
+                                    'user_id' => auth()->id()
+                                ],
+                                [
+                                    'phone' => $phone
+                                ]
+                            );
+                        }
+
+                        // ✅ Calculer le montant restant
+                        $montantRestant = $montantTotal - $montantPaye;
+
+                        // ✅ Créer le crédit
+                        $credit = Credit::create([
+                            'client_id' => $client->id,
+                            'user_id' => auth()->id(),
+                            'created_by' => auth()->id(),
+                            'amount' => $montantTotal,
+                            'paid_amount' => $montantPaye,
+                            'remaining_amount' => $montantRestant,
+                            'reason' => $raison ?: null,
+                            'status' => $montantRestant <= 0 ? 'paid' : $status,
+                        ]);
+
+                        // ✅ Si un paiement initial existe, l'enregistrer
+                        if ($montantPaye > 0) {
+                            Payment::create([
+                                'credit_id' => $credit->id,
+                                'amount' => $montantPaye,
+                                'payment_date' => now(),
+                                'notes' => 'Paiement initial (import CSV)',
+                                'created_by' => auth()->id(),
+                            ]);
+                        }
+
+                        $imported++;
+                    } catch (\Exception $e) {
+                        $errors[] = "Ligne {$lineNumber}: {$e->getMessage()}";
+                        Log::error("Import error line {$lineNumber}", [
+                            'error' => $e->getMessage(),
+                            'row' => $row
+                        ]);
+                    }
+                }
+
+                DB::commit();
+
+                // ✅ Message de succès
+                $message = "✅ {$imported} crédit(s) importé(s) avec succès";
+
+                if (!empty($errors)) {
+                    $errorCount = count($errors);
+                    $message .= " | ⚠️ {$errorCount} erreur(s): " . implode(', ', array_slice($errors, 0, 3));
+                    if ($errorCount > 3) {
+                        $message .= " et " . ($errorCount - 3) . " autres erreurs";
+                    }
+                }
+
+                return redirect()->route('credits.index')->with('success', $message);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
+        } catch (\Exception $e) {
+            Log::error('Import error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->with('error', 'Erreur lors de l\'importation: ' . $e->getMessage());
+        }
     }
 }

@@ -10,20 +10,20 @@ class CheckAccess
     {
         $user = auth()->user();
 
-        // ✅ Admin يدخل لكل شي
+        // ✅ Admin a accès à tout
         if ($user->is_admin) {
             return $next($request);
         }
 
-        // ✅ للصفحات العادية: تحقق من الاشتراك
+        // ✅ Pour les pages normales : vérifier l'abonnement
         if ($role === 'user' && !$user->canUseApp()) {
             return redirect()->route('subscribe.show')
-                ->with('error', 'حسابك غير مفعل أو منتهي الصلاحية');
+                ->with('error', 'Votre compte n\'est pas activé ou a expiré');
         }
 
-        // ✅ لصفحات Admin: ممنوع
+        // ✅ Pour les pages Admin : interdit
         if ($role === 'admin') {
-            abort(403, 'غير مصرح');
+            abort(403, 'Non autorisé');
         }
 
         return $next($request);

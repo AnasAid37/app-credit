@@ -48,6 +48,11 @@ Route::middleware(['auth', 'check.access:user'])->group(function () {
     Route::put('/profile/settings', [ProfileController::class, 'updateSettings'])->name('profile.settings');
 
     // المنتجات
+    Route::get('/products/import', [ProductController::class, 'showImportForm'])->name('products.import');
+    Route::post('/products/import', [ProductController::class, 'import'])->name('products.import.post');
+    Route::get('/products/template', [ProductController::class, 'downloadTemplate'])->name('products.template');
+    Route::get('/products/export', [ProductController::class, 'export'])->name('products.export');
+    Route::post('/products/bulk-delete', [ProductController::class, 'bulkDelete'])->name('products.bulk-delete');
     Route::resource('products', ProductController::class);
 
     // حركات المخزون
@@ -60,7 +65,18 @@ Route::middleware(['auth', 'check.access:user'])->group(function () {
     Route::get('/get-alert-count', [AlertController::class, 'getAlertCount'])->name('alerts.count');
 
     // الكريديات
+    // ===== Import / Export Crédits =====
+    Route::get('/credits/import', [CreditController::class, 'showImport'])
+        ->name('credits.import.form');
+
+    Route::post('/credits/import', [CreditController::class, 'import'])
+        ->name('credits.import');
+    Route::get('/credits/template', [CreditController::class, 'downloadTemplate'])->name('credits.template');
+
+
     Route::resource('credits', CreditController::class);
+    Route::post('/credits/bulk-delete', [CreditController::class, 'bulkDelete'])
+        ->name('credits.bulk-delete');
     Route::post('/credits/{credit}/add-payment', [CreditController::class, 'addPayment'])->name('credits.add-payment');
     Route::get('/credits-search', [CreditController::class, 'search'])->name('credits.search');
     Route::get('/credits-export', [CreditController::class, 'export'])->name('credits.export');

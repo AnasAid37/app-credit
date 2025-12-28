@@ -29,7 +29,7 @@ class AdminController extends Controller
         $user->subscription_type = $request->subscription_type;
 
         if ($request->subscription_type === 'monthly') {
-            $user->subscription_expires_at = now()->addMonths($request->months);
+            $user->subscription_expires_at = now()->addMonths((int) $request->months);
         } else {
             $user->subscription_expires_at = null;
         }
@@ -47,20 +47,24 @@ class AdminController extends Controller
 
     public function extend(Request $request, User $user)
     {
-        $request->validate(['months' => 'required|integer|min:1|max:12']);
+        $request->validate([
+            'months' => 'required|integer|min:1|max:12'
+        ]);
 
         if ($user->subscription_type !== 'monthly') {
             return back()->with('error', 'Seuls les abonnements mensuels peuvent être prolongés');
         }
 
+        $months = (int) $request->months; // ✅ تحويل صريح إلى int
+
         if (!$user->subscription_expires_at || now()->greaterThan($user->subscription_expires_at)) {
-            $user->subscription_expires_at = now()->addMonths($request->months);
+            $user->subscription_expires_at = now()->addMonths($months);
         } else {
-            $user->subscription_expires_at = $user->subscription_expires_at->addMonths($request->months);
+            $user->subscription_expires_at = $user->subscription_expires_at->addMonths($months);
         }
 
         $user->save();
 
-        return back()->with('success', "Abonnement prolongé de {$request->months} mois");
+        return back()->with('success', "Abonnement prolongé de {$months} mois");
     }
 }

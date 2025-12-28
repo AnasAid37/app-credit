@@ -1,7 +1,7 @@
 {{-- resources/views/credits/partials/credit-rows.blade.php --}}
 
 @forelse($credits as $credit)
-<tr>
+<tr data-credit-id="{{ $credit->id }}">
     <!-- Client -->
     <td>
         <div class="d-flex align-items-center">
@@ -84,44 +84,43 @@
 
         // Déterminer le statut basé sur le champ status ou calculé
         if (isset($credit->status)) {
-        // Si le champ status existe
-        switch($credit->status) {
-        case 'paid':
-        $statusInfo = ['text' => 'Payé', 'class' => 'badge-success', 'icon' => 'fa-check-circle'];
-        break;
-        case 'active':
-        if ($remaining <= 0) {
-            $statusInfo=['text'=> 'Payé', 'class' => 'badge-success', 'icon' => 'fa-check-circle'];
-            } elseif ($credit->paid_amount > 0) {
-            $statusInfo = ['text' => 'Partiel', 'class' => 'badge-warning', 'icon' => 'fa-clock'];
-            } else {
-            $statusInfo = ['text' => 'En attente', 'class' => 'badge-danger', 'icon' => 'fa-exclamation-circle'];
+            switch($credit->status) {
+                case 'paid':
+                    $statusInfo = ['text' => 'Payé', 'class' => 'badge-success', 'icon' => 'fa-check-circle'];
+                    break;
+                case 'active':
+                    if ($remaining <= 0) {
+                        $statusInfo = ['text' => 'Payé', 'class' => 'badge-success', 'icon' => 'fa-check-circle'];
+                    } elseif ($credit->paid_amount > 0) {
+                        $statusInfo = ['text' => 'Partiel', 'class' => 'badge-warning', 'icon' => 'fa-clock'];
+                    } else {
+                        $statusInfo = ['text' => 'En attente', 'class' => 'badge-danger', 'icon' => 'fa-exclamation-circle'];
+                    }
+                    break;
+                case 'cancelled':
+                    $statusInfo = ['text' => 'Annulé', 'class' => 'badge-danger', 'icon' => 'fa-times-circle'];
+                    break;
+                case 'pending':
+                    $statusInfo = ['text' => 'En attente', 'class' => 'badge-warning', 'icon' => 'fa-clock'];
+                    break;
+                default:
+                    $statusInfo = ['text' => 'Actif', 'class' => 'badge-primary', 'icon' => 'fa-play-circle'];
             }
-            break;
-            case 'cancelled':
-            $statusInfo = ['text' => 'Annulé', 'class' => 'badge-danger', 'icon' => 'fa-times-circle'];
-            break;
-            case 'pending':
-            $statusInfo = ['text' => 'En attente', 'class' => 'badge-warning', 'icon' => 'fa-clock'];
-            break;
-            default:
-            $statusInfo = ['text' => 'Actif', 'class' => 'badge-primary', 'icon' => 'fa-play-circle'];
-            }
-            } else {
+        } else {
             // Calcul automatique du statut
             if ($remaining <= 0) {
-                $statusInfo=['text'=> 'Payé', 'class' => 'badge-success', 'icon' => 'fa-check-circle'];
-                } elseif ($credit->paid_amount > 0) {
+                $statusInfo = ['text' => 'Payé', 'class' => 'badge-success', 'icon' => 'fa-check-circle'];
+            } elseif ($credit->paid_amount > 0) {
                 $statusInfo = ['text' => 'Partiel', 'class' => 'badge-warning', 'icon' => 'fa-clock'];
-                } else {
+            } else {
                 $statusInfo = ['text' => 'En attente', 'class' => 'badge-danger', 'icon' => 'fa-exclamation-circle'];
-                }
-                }
-                @endphp
-                <span class="badge-modern {{ $statusInfo['class'] }}">
-                    <i class="fas {{ $statusInfo['icon'] }}"></i>
-                    {{ $statusInfo['text'] }}
-                </span>
+            }
+        }
+        @endphp
+        <span class="badge-modern {{ $statusInfo['class'] }}">
+            <i class="fas {{ $statusInfo['icon'] }}"></i>
+            {{ $statusInfo['text'] }}
+        </span>
     </td>
 
     <!-- Date -->
@@ -153,23 +152,12 @@
                 <i class="fas fa-edit"></i>
             </a>
             
-            @php
-            $canDelete = true;
-            if (isset($credit->status)) {
-            $canDelete = $credit->status !== 'paid';
-            } else {
-            $canDelete = $remaining > 0;
-            }
-            @endphp
-            
             <button type="button"
                 class="action-btn action-btn-delete"
                 onclick="confirmDelete({{ $credit->id }}, '{{ addslashes($clientName) }}')"
                 title="Supprimer">
                 <i class="fas fa-trash"></i>
             </button>
-            
-
         </div>
     </td>
 </tr>
@@ -332,7 +320,6 @@
 <script>
     // Fonction de confirmation de suppression moderne
     function confirmDelete(id, clientName) {
-        // Créer une modal personnalisée
         const modal = document.createElement('div');
         modal.className = 'custom-confirm-modal';
         modal.innerHTML = `
@@ -370,7 +357,6 @@
 
         document.body.appendChild(modal);
 
-        // Animation d'entrée
         setTimeout(() => {
             modal.querySelector('.custom-confirm-overlay').style.opacity = '1';
             modal.querySelector('.custom-confirm-content').style.transform = 'scale(1)';
@@ -389,7 +375,6 @@
     }
 
     function executeDelete(id) {
-        // Créer et soumettre le formulaire
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = `/credits/${id}`;
@@ -411,7 +396,7 @@
         form.submit();
     }
 
-    // Style pour la modal personnalisée (يتم إضافة هذا مرة واحدة فقط)
+    // Style pour la modal personnalisée
     if (!document.getElementById('custom-confirm-styles')) {
         const style = document.createElement('style');
         style.id = 'custom-confirm-styles';
