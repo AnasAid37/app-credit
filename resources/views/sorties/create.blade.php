@@ -922,75 +922,109 @@
                 }
             });
         });
-        document.addEventListener('DOMContentLoaded', function() {
-            const paymentCash = document.getElementById('payment_cash');
-            const paymentCredit = document.getElementById('payment_credit');
-            const creditFormSection = document.getElementById('credit-form-section');
-            const totalPriceDisplay = document.getElementById('total-price');
-            const creditPaidInput = document.getElementById('credit_paid_amount');
-            const creditRemainingDisplay = document.getElementById('credit_remaining_display');
+        document.addEventListener('DOMContentLoaded', function () {
 
-            // Toggle Credit Form
-            function toggleCreditForm() {
-                if (paymentCredit.checked) {
-                    creditFormSection.style.display = 'block';
-                    updateCreditRemaining();
-                } else {
-                    creditFormSection.style.display = 'none';
-                }
-            }
+    const paymentCash = document.getElementById('payment_cash');
+    const paymentCredit = document.getElementById('payment_credit');
+    const creditFormSection = document.getElementById('credit-form-section');
 
-            paymentCash.addEventListener('change', toggleCreditForm);
-            paymentCredit.addEventListener('change', toggleCreditForm);
+    const totalPriceDisplay = document.getElementById('total-price');
+    const creditPaidInput = document.getElementById('credit_paid_amount');
+    const creditRemainingDisplay = document.getElementById('credit_remaining_display');
 
-            // Calculate Credit Remaining
-            function updateCreditRemaining() {
-                const totalPrice = parseFloat(totalPriceDisplay.textContent.replace(/[^0-9.]/g, '')) || 0;
+    const sortieForm = document.getElementById('sortieForm');
+
+    // ===============================
+    // تحويل السعر من تنسيق فرنسي إلى رقم
+    // ===============================
+    function getNumericPrice(text) {
+        return parseFloat(
+            text
+                .replace(/\s/g, '')   // إزالة المسافات
+                .replace('DH', '')
+                .replace(',', '.')    // فاصلة فرنسية ➜ نقطة
+        ) || 0;
+    }
+
+    // ===============================
+    // حساب المبلغ المتبقي
+    // ===============================
+    function updateCreditRemaining() {
+        const totalPrice = getNumericPrice(totalPriceDisplay.textContent);
+        const paidAmount = parseFloat(creditPaidInput.value) || 0;
+        const remaining = Math.max(0, totalPrice - paidAmount);
+
+        creditRemainingDisplay.textContent =
+            new Intl.NumberFormat('fr-FR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(remaining) + ' DH';
+    }
+
+    // ===============================
+    // إظهار / إخفاء معلومات الكريدي
+    // ===============================
+    function toggleCreditForm() {
+        if (paymentCredit && paymentCredit.checked) {
+            creditFormSection.style.display = 'block';
+            updateCreditRemaining();
+        } else {
+            creditFormSection.style.display = 'none';
+        }
+    }
+
+    if (paymentCash) paymentCash.addEventListener('change', toggleCreditForm);
+    if (paymentCredit) paymentCredit.addEventListener('change', toggleCreditForm);
+
+    // ===============================
+    // تحديث الحساب عند تغيير المبلغ المدفوع
+    // ===============================
+    if (creditPaidInput) {
+        creditPaidInput.addEventListener('input', updateCreditRemaining);
+    }
+
+    // ===============================
+    // مراقبة تغيير السعر الإجمالي
+    // ===============================
+    const observer = new MutationObserver(updateCreditRemaining);
+    observer.observe(totalPriceDisplay, {
+        childList: true,
+        subtree: true,
+        characterData: true
+    });
+
+    // ===============================
+    // التحقق قبل الإرسال
+    // ===============================
+    if (sortieForm) {
+        sortieForm.addEventListener('submit', function (e) {
+
+            if (paymentCredit && paymentCredit.checked) {
+
+                const totalPrice = getNumericPrice(totalPriceDisplay.textContent);
                 const paidAmount = parseFloat(creditPaidInput.value) || 0;
-                const remaining = Math.max(0, totalPrice - paidAmount);
 
-                creditRemainingDisplay.textContent = new Intl.NumberFormat('fr-FR', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                }).format(remaining) + ' DH';
-            }
-
-            // Update on paid amount change
-            creditPaidInput.addEventListener('input', updateCreditRemaining);
-
-            // Update when total price changes
-            const observer = new MutationObserver(updateCreditRemaining);
-            observer.observe(totalPriceDisplay, {
-                characterData: true,
-                childList: true,
-                subtree: true
-            });
-
-            // Validation du formulaire
-            const originalSubmit = document.getElementById('sortieForm').onsubmit;
-            document.getElementById('sortieForm').addEventListener('submit', function(e) {
-                if (paymentCredit.checked) {
-                    const totalPrice = parseFloat(totalPriceDisplay.textContent.replace(/[^0-9.]/g, '')) ||
-                        0;
-                    const paidAmount = parseFloat(creditPaidInput.value) || 0;
-
-                    if (paidAmount > totalPrice) {
-                        e.preventDefault();
-                        alert('Le montant payé ne peut pas dépasser le prix total');
-                        creditPaidInput.focus();
-                        return false;
-                    }
-
-                    // Vérifier que le nom du client est rempli
-                    const nomClient = document.getElementById('nom_client').value.trim();
-                    if (!nomClient) {
-                        e.preventDefault();
-                        alert('Le nom du client est requis pour créer un crédit');
-                        document.getElementById('nom_client').focus();
-                        return false;
-                    }
+                if (paidAmount > totalPrice) {
+                    e.preventDefault();
+                    alert('Le montant payé ne peut pas dépasser le prix total');
+                    creditPaidInput.focus();
+                    return false;
                 }
-            });
+
+                const nomClient = document.getElementById('nom_client').value.trim();
+                if (!nomClient) {
+                    e.preventDefault();
+                    alert('Le nom du client est requis pour créer un crédit');
+                    document.getElementById('nom_client').focus();
+                    return false;
+                }
+            }
         });
+    }
+
+    // تشغيل أولي
+    toggleCreditForm();
+    updateCreditRemaining();
+});
     </script>
 @endsection

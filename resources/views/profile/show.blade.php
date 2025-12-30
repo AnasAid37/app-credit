@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Mon Profil - Pneumatique Aqabli')
+@section('title', 'Mon Profil - Pneumatique Gestion Complète')
 
 @push('styles')
 <style>

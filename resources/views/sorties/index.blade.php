@@ -327,6 +327,138 @@
             gap: 0.5rem;
         }
 
+        nav[role="navigation"],
+        .pagination:not(.pagination-modern) {
+            display: none !important;
+        }
+
+        /* Pagination Wrapper */
+        .pagination-wrapper-modern {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .pagination-info-modern {
+            display: flex;
+            align-items: center;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .pagination-info-modern i {
+            color: var(--primary-color);
+        }
+
+        .pagination-info-modern strong {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* Pagination moderne */
+        .pagination-modern {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .pagination-modern li {
+            display: flex;
+        }
+
+        .pagination-modern li a,
+        .pagination-modern li span {
+            min-width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            background: white;
+            color: #64748b;
+            font-weight: 500;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .pagination-modern li a:hover {
+            border-color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
+        }
+
+        .pagination-modern li.active span {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+        }
+
+        .pagination-modern li.disabled span {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+            color: #cbd5e1;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .pagination-modern li i {
+            font-size: 0.75rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .pagination-wrapper-modern {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .pagination-info-modern {
+                width: 100%;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .pagination-modern {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .pagination-modern li a,
+            .pagination-modern li span {
+                min-width: 36px;
+                height: 36px;
+                padding: 0.375rem 0.5rem;
+                font-size: 0.8125rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+
+            .pagination-modern li a,
+            .pagination-modern li span {
+                min-width: 32px;
+                height: 32px;
+                padding: 0.25rem 0.375rem;
+                font-size: 0.75rem;
+            }
+        }
+
         .page-link {
             border: 2px solid #e2e8f0;
             border-radius: 0.5rem;
@@ -669,16 +801,94 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-3">
-                    <div class="text-muted">
-                        <i class="fas fa-info-circle me-1"></i>
-                        Affichage de {{ $sorties->firstItem() }} à {{ $sorties->lastItem() }} sur {{ $sorties->total() }}
-                        sorties
+                <!-- Pagination -->
+                @if (method_exists($sorties, 'links') && $sorties->hasPages())
+                    <div class="pagination-wrapper-modern">
+                        <div class="pagination-info-modern">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <span>
+                                Affichage de
+                                <strong>{{ $sorties->firstItem() }}</strong>
+                                à
+                                <strong>{{ $sorties->lastItem() }}</strong>
+                                sur
+                                <strong>{{ $sorties->total() }}</strong>
+                                sorties
+                            </span>
+                        </div>
+
+                        <nav>
+                            <ul class="pagination-modern">
+
+                                {{-- Précédent --}}
+                                @if ($sorties->onFirstPage())
+                                    <li class="disabled">
+                                        <span><i class="fas fa-chevron-left"></i></span>
+                                    </li>
+                                @else
+                                    <li>
+                                        <a href="{{ $sorties->previousPageUrl() }}">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                @endif
+
+                                {{-- Pages --}}
+                                @php
+                                    $currentPage = $sorties->currentPage();
+                                    $lastPage = $sorties->lastPage();
+                                    $start = max(1, $currentPage - 2);
+                                    $end = min($lastPage, $currentPage + 2);
+                                @endphp
+
+                                @if ($start > 1)
+                                    <li>
+                                        <a href="{{ $sorties->url(1) }}">1</a>
+                                    </li>
+                                    @if ($start > 2)
+                                        <li class="disabled"><span>...</span></li>
+                                    @endif
+                                @endif
+
+                                @for ($i = $start; $i <= $end; $i++)
+                                    @if ($i == $currentPage)
+                                        <li class="active">
+                                            <span>{{ $i }}</span>
+                                        </li>
+                                    @else
+                                        <li>
+                                            <a href="{{ $sorties->url($i) }}">{{ $i }}</a>
+                                        </li>
+                                    @endif
+                                @endfor
+
+                                @if ($end < $lastPage)
+                                    @if ($end < $lastPage - 1)
+                                        <li class="disabled"><span>...</span></li>
+                                    @endif
+                                    <li>
+                                        <a href="{{ $sorties->url($lastPage) }}">{{ $lastPage }}</a>
+                                    </li>
+                                @endif
+
+                                {{-- Suivant --}}
+                                @if ($sorties->hasMorePages())
+                                    <li>
+                                        <a href="{{ $sorties->nextPageUrl() }}">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                @else
+                                    <li class="disabled">
+                                        <span><i class="fas fa-chevron-right"></i></span>
+                                    </li>
+                                @endif
+
+                            </ul>
+                        </nav>
                     </div>
-                    <div>
-                        {{ $sorties->appends(request()->query())->links() }}
-                    </div>
-                </div>
+                @endif
+
             @endif
         </div>
     </div>
