@@ -17,7 +17,9 @@ class CreditController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Credit::with(['client', 'creator']);
+        // ✅ فلترة حسب المستخدم الحالي
+        $query = Credit::with(['client', 'creator'])
+            ->where('user_id', auth()->id());
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -64,16 +66,17 @@ class CreditController extends Controller
             $existingClient = Client::where('name', $validated['client_name'])->first();
 
             if ($existingClient) {
-                // العميل موجود - احصل على آخر كريدي له
-                $latestCredit = Credit::where('client_id', $existingClient->id)
-                    ->orderBy('created_at', 'desc')
-                    ->first();
+                $latestCredit = $existingClient->credits()->latest()->first();
 
-                DB::rollback();
-
-                return redirect()
-                    ->route('credits.show', $latestCredit ? $latestCredit->id : $existingClient->credits()->first()->id)
-                    ->with('info', "Le client '{$validated['client_name']}' existe déjà. Voici ses crédits.");
+                if ($latestCredit) {
+                    return redirect()
+                        ->route('credits.show', $latestCredit->id)
+                        ->with('info', "Le client '{$validated['client_name']}' existe déjà. Voici son dernier crédit.");
+                } else {
+                    return redirect()
+                        ->route('credits.index')
+                        ->with('info', "Le client '{$validated['client_name']}' existe déjà mais n'a pas encore de crédit.");
+                }
             }
 
             // إنشاء عميل جديد
@@ -136,7 +139,8 @@ class CreditController extends Controller
      */
     public function edit(Credit $credit)
     {
-        $credit->load(['client', 'creator']);
+        $credit->load(['client', 'creator', 'payments.creator']);
+
         return view('credits.edit', compact('credit'));
     }
 

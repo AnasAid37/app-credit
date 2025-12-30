@@ -7,12 +7,19 @@ use App\Models\Sortie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Client;
+use App\Models\Credit;
+use App\Models\Payment;
+use Illuminate\Support\Facades\Log;
+
 
 class SortieController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Sortie::with(['product', 'user']);
+        // ✅ فلترة حسب المستخدم الحالي
+        $query = Sortie::with(['product', 'user', 'credit'])
+            ->where('user_id', auth()->id());
 
         // تطبيق الفلاتر
         if ($request->filled('date_debut')) {
@@ -31,58 +38,154 @@ class SortieController extends Controller
             $query->where('motif_sortie', 'like', "%{$request->motif_sortie}%");
         }
 
+        // حساب الإحصائيات
+        $stats = [
+            'total_quantity' => $query->sum('quantite'),
+            'total_amount' => $query->sum('total_price'),
+            'total_count' => $query->count(),
+        ];
+
         $sorties = $query->orderBy('created_at', 'desc')->paginate(10);
 
-        return view('sorties.index', compact('sorties'));
+        return view('sorties.index', compact('sorties', 'stats'));
     }
 
     public function create()
     {
-        $products = Product::where('quantite', '>', 0)->get();
+        // ✅ فلترة المنتجات حسب المستخدم
+        $products = Product::where('user_id', auth()->id())
+            ->where('quantite', '>', 0)
+            ->get();
+
         return view('sorties.create', compact('products'));
     }
-
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'produit_id' => 'required|exists:products,id',
+        // ✅ تغيير من product_id إلى produit_id
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,id',  // ✅ هنا التغيير
             'quantite' => 'required|integer|min:1',
             'nom_client' => 'required|string|max:255',
-            'motif_sortie' => 'required|string|max:255'
+            'motif_sortie' => 'required|string',
+            'autre_motif' => 'nullable|string|max:500',
+            'payment_mode' => 'required|in:cash,credit',
+            'credit_paid_amount' => 'nullable|numeric|min:0',
+            'credit_reason' => 'nullable|string|max:1000',
+        ], [
+            // ✅ رسائل خطأ مخصصة
+            'product_id.required' => 'Veuillez sélectionner un produit',
+            'product_id.exists' => 'Le produit sélectionné n\'existe pas',
+            'quantite.required' => 'La quantité est requise',
+            'quantite.min' => 'La quantité doit être au moins 1',
+            'nom_client.required' => 'Le nom du client est requis',
+            'motif_sortie.required' => 'Le motif de sortie est requis',
+            'payment_mode.required' => 'Le mode de paiement est requis',
         ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
+        try {
+            DB::beginTransaction();
 
-        $product = Product::findOrFail($request->produit_id);
+            // ✅ استخدام produit_id من الـ validated
+            $product = Product::where('id', $validated['product_id'])
+                ->where('user_id', auth()->id())
+                ->firstOrFail();
 
-        if ($product->quantite < $request->quantite) {
-            return redirect()->back()->with('warning', 
-                "Stock insuffisant. Il reste seulement {$product->quantite} unité(s) en stock.")->withInput();
-        }
+            if ($product->quantite < $validated['quantite']) {
+                return redirect()->back()
+                    ->with('error', 'Stock insuffisant. Stock disponible: ' . $product->quantite)
+                    ->withInput();
+            }
 
-        DB::transaction(function () use ($request, $product) {
-            // تحديث كمية المنتج
-            $product->decrement('quantite', $request->quantite);
+            $totalPrice = $product->price * $validated['quantite'];
 
-            // تسجيل حركة الخروج
-            Sortie::create([
-                'product_id' => $request->produit_id,
+            $motifFinal = $validated['motif_sortie'] === 'Autre'
+                ? ($validated['autre_motif'] ?? 'Autre')
+                : $validated['motif_sortie'];
+
+            // ✅ إنشاء Sortie - استخدام product_id (اسم العمود)
+            $sortie = Sortie::create([
+                'product_id' => $product->id,  // ✅ product_id في الجدول
+                'quantite' => $validated['quantite'],
+                'nom_client' => $validated['nom_client'],
+                'motif_sortie' => $motifFinal,
+                'total_price' => $totalPrice,
+                'payment_mode' => $validated['payment_mode'],
                 'user_id' => auth()->id(),
-                'quantite' => $request->quantite,
-                'nom_client' => $request->nom_client,
-                'motif_sortie' => $request->motif_sortie,
-                'prix_total' => $product->price * $request->quantite
+                'created_by' => auth()->id(),
             ]);
-        });
 
-        return redirect()->route('sorties.create')->with('success', 
-            "Sortie de stock enregistrée avec succès. Produit : {$product->marque} ({$product->taille})");
+            $product->decrement('quantite', $validated['quantite']);
+
+            $successMessage = "Sortie enregistrée avec succès";
+
+            // Gestion du crédit
+            if ($validated['payment_mode'] === 'credit') {
+                $client = Client::firstOrCreate(
+                    [
+                        'name' => $validated['nom_client'],
+                        'user_id' => auth()->id()
+                    ],
+                    [
+                        'phone' => null,
+                        'address' => null
+                    ]
+                );
+
+                $paidAmount = $validated['credit_paid_amount'] ?? 0;
+                $remainingAmount = $totalPrice - $paidAmount;
+
+                $credit = Credit::create([
+                    'client_id' => $client->id,
+                    'amount' => $totalPrice,
+                    'paid_amount' => $paidAmount,
+                    'remaining_amount' => $remainingAmount,
+                    'reason' => $validated['credit_reason'] ?? "Sortie stock - {$motifFinal}",
+                    'status' => $remainingAmount <= 0 ? 'paid' : 'active',
+                    'user_id' => auth()->id(),
+                    'created_by' => auth()->id(),
+                ]);
+
+                $sortie->update(['credit_id' => $credit->id]);
+
+                if ($paidAmount > 0) {
+                    Payment::create([
+                        'credit_id' => $credit->id,
+                        'amount' => $paidAmount,
+                        'payment_date' => now(),
+                        'notes' => 'Paiement initial lors de la sortie de stock',
+                        'created_by' => auth()->id(),
+                    ]);
+                }
+
+                $successMessage .= " et crédit créé pour {$validated['nom_client']} (Restant: " . number_format($remainingAmount, 2) . " DH)";
+            } else {
+                $successMessage .= " (Paiement comptant: " . number_format($totalPrice, 2) . " DH)";
+            }
+
+            DB::commit();
+
+            return redirect()->route('sorties.index')
+                ->with('success', $successMessage);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Sortie creation error', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+                'data' => $request->all()
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Erreur lors de l\'enregistrement: ' . $e->getMessage())
+                ->withInput();
+        }
     }
+
+
 
     public function show(Sortie $sortie)
     {
+        $sortie->load(['product', 'credit.client', 'credit.payments']);
         return view('sorties.show', compact('sortie'));
     }
 

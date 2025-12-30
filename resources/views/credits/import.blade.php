@@ -112,12 +112,12 @@
                                     <i class="fas fa-upload me-2"></i>
                                     Importer les données
                                 </button>
+
+                                <a href="{{ route('credits.template') }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-download me-2"></i>
+                                    Télécharger Modèle
+                                </a>
                             </div>
-                            <a href="{{ route('credits.template') }}" class="btn btn-secondary"
-                                title="Télécharger le modèle CSV">
-                                <i class="fas fa-download"></i>
-                                Modèle
-                            </a>
                         </form>
                     </div>
                 </div>

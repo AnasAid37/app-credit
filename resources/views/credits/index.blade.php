@@ -738,19 +738,17 @@
                     </p>
                 </div>
                 <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ route('credits.import') }}" class="btn btn-light">
+                        <i class="fas fa-file-import"></i>
+                        Importer
+                    </a>
 
                     <a href="{{ route('credits.export') }}" class="btn btn-light">
                         <i class="fas fa-file-export"></i>
                         Exporter
                     </a>
-                    <a href="{{ route('credits.import') }}" class="btn btn-light">
-                        <i class="fas fa-file-import"></i>
-                        Importer
 
-
-                    </a>
-                    <a href="{{ route('credits.template') }}" class="btn btn-secondary"
-                        title="Télécharger le modèle CSV">
+                    <a href="{{ route('credits.template') }}" class="btn btn-secondary" title="Télécharger le modèle CSV">
                         <i class="fas fa-download"></i>
                         Modèle
                     </a>

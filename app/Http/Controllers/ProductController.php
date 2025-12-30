@@ -11,31 +11,32 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::query();
-        
+        // ✅ فلترة حسب المستخدم الحالي
+        $query = Product::where('user_id', auth()->id());
+
         // البحث
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('price', 'like', "%{$search}%")
-                  ->orWhere('taille', 'like', "%{$search}%")
-                  ->orWhere('marque', 'like', "%{$search}%");
+                    ->orWhere('taille', 'like', "%{$search}%")
+                    ->orWhere('marque', 'like', "%{$search}%");
             });
         }
-        
+
         // الترتيب
         $sort = $request->get('sort', 'created_at');
         $order = $request->get('order', 'DESC');
-        
+
         $allowedSorts = ['price', 'taille', 'marque', 'quantite', 'created_at'];
         if (!in_array($sort, $allowedSorts)) {
             $sort = 'created_at';
         }
-        
+
         $query->orderBy($sort, $order);
-        
+
         $products = $query->paginate(15);
-        
+
         return view('products.index', compact('products'));
     }
 
@@ -116,13 +117,13 @@ class ProductController extends Controller
     {
         try {
             DB::beginTransaction();
-            
+
             // حذف حركات المخزون المرتبطة
             $product->sorties()->delete();
             $product->delete();
-            
+
             DB::commit();
-            
+
             return redirect()->route('products.index')->with('success', 'Le produit a été supprimé avec succès.');
         } catch (\Exception $e) {
             DB::rollback();
@@ -142,17 +143,17 @@ class ProductController extends Controller
 
         try {
             DB::beginTransaction();
-            
+
             $products = Product::whereIn('id', $request->ids)->get();
             $count = $products->count();
-            
+
             foreach ($products as $product) {
                 $product->sorties()->delete();
                 $product->delete();
             }
-            
+
             DB::commit();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => "{$count} produit(s) supprimé(s) avec succès"
@@ -190,21 +191,21 @@ class ProductController extends Controller
         try {
             $file = $request->file('file');
             $path = $file->getRealPath();
-            
+
             // Lire avec encodage UTF-8
             $content = file_get_contents($path);
             if (!mb_check_encoding($content, 'UTF-8')) {
                 $content = mb_convert_encoding($content, 'UTF-8', 'auto');
             }
-            
+
             $tempPath = sys_get_temp_dir() . '/temp_products_' . time() . '.csv';
             file_put_contents($tempPath, $content);
-            
+
             $data = array_map('str_getcsv', file($tempPath));
             unlink($tempPath);
-            
+
             $header = array_shift($data);
-            
+
             $imported = 0;
             $updated = 0;
             $errors = [];
@@ -258,7 +259,6 @@ class ProductController extends Controller
                         ]);
                         $imported++;
                     }
-
                 } catch (\Exception $e) {
                     $errors[] = "Ligne {$lineNumber}: {$e->getMessage()}";
                 }
@@ -267,7 +267,7 @@ class ProductController extends Controller
             DB::commit();
 
             $message = "{$imported} produit(s) importé(s), {$updated} mis à jour";
-            
+
             if (!empty($errors)) {
                 $message .= ". Erreurs: " . implode(', ', array_slice($errors, 0, 2));
                 if (count($errors) > 2) {
@@ -276,7 +276,6 @@ class ProductController extends Controller
             }
 
             return redirect()->route('products.index')->with('success', $message);
-
         } catch (\Exception $e) {
             DB::rollback();
             return back()->with('error', 'Erreur lors de l\'importation: ' . $e->getMessage());
@@ -297,9 +296,9 @@ class ProductController extends Controller
 
         $callback = function () {
             $file = fopen('php://output', 'w');
-            
+
             fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            
+
             fputcsv($file, [
                 'Prix',
                 'Taille',
@@ -333,11 +332,11 @@ class ProductController extends Controller
             'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
         ];
 
-        $callback = function() use ($products) {
+        $callback = function () use ($products) {
             $file = fopen('php://output', 'w');
-            
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
+
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
             fputcsv($file, [
                 'ID',
                 'Prix',

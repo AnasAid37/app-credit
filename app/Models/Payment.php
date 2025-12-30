@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Scopes\OwnedByUser;
 
 class Payment extends Model
 {
     use HasFactory;
+    
 
     protected $fillable = [
         'credit_id',
@@ -24,6 +26,6 @@ class Payment extends Model
 
     public function creator()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'created_by'); // بدل 'user_id'
     }
 }
