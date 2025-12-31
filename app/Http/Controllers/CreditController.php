@@ -6,6 +6,7 @@ use App\Models\Credit;
 use App\Models\Client;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use App\Models\Sortie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -204,11 +205,25 @@ class CreditController extends Controller
         try {
             DB::beginTransaction();
 
-            // Supprimer d'abord les paiements associés
+            $clientId = $credit->client_id;
+            $clientName = $credit->client->name;
+
+            // حذف الـ payments
             $credit->payments()->delete();
 
-            // Puis supprimer le crédit
+            // فك ارتباط sorties
+            Sortie::where('credit_id', $credit->id)->update(['credit_id' => null]);
+
+            // حذف الـ credit
             $credit->delete();
+
+            // ✅ حذف Client إذا لم يكن له كريديات أخرى
+            $clientHasOtherCredits = Credit::where('client_id', $clientId)->exists();
+
+            if (!$clientHasOtherCredits) {
+                Client::where('id', $clientId)->delete();
+                Log::info("Client supprimé automatiquement: {$clientName} (ID: {$clientId})");
+            }
 
             DB::commit();
 
@@ -216,8 +231,81 @@ class CreditController extends Controller
                 ->with('success', 'Crédit supprimé avec succès!');
         } catch (\Exception $e) {
             DB::rollback();
+
+            Log::error('Credit deletion error', [
+                'error' => $e->getMessage(),
+                'credit_id' => $credit->id
+            ]);
+
             return redirect()->back()
-                ->with('error', 'Erreur lors de la suppression du crédit: ' . $e->getMessage());
+                ->with('error', 'Erreur lors de la suppression: ' . $e->getMessage());
+        }
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'ids' => 'required|array|min:1',
+                'ids.*' => 'required|integer|exists:credits,id'
+            ]);
+
+            $ids = $validated['ids'];
+
+            DB::beginTransaction();
+
+            try {
+                // ✅ جمع client IDs قبل الحذف
+                $clientIds = Credit::whereIn('id', $ids)
+                    ->pluck('client_id')
+                    ->unique()
+                    ->toArray();
+
+                // حذف payments
+                Payment::whereIn('credit_id', $ids)->delete();
+
+                // فك ارتباط sorties
+                Sortie::whereIn('credit_id', $ids)->update(['credit_id' => null]);
+
+                // حذف credits
+                $count = Credit::whereIn('id', $ids)->delete();
+
+                // ✅ حذف clients بدون كريديات
+                $deletedClients = 0;
+                foreach ($clientIds as $clientId) {
+                    $hasCredits = Credit::where('client_id', $clientId)->exists();
+                    if (!$hasCredits) {
+                        Client::where('id', $clientId)->delete();
+                        $deletedClients++;
+                    }
+                }
+
+                Log::info('Bulk delete credits', [
+                    'credits_deleted' => $count,
+                    'clients_deleted' => $deletedClients,
+                    'user_id' => auth()->id()
+                ]);
+
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'count' => $count,
+                    'message' => "$count crédit(s) et $deletedClients client(s) supprimé(s)"
+                ], 200);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
+        } catch (\Exception $e) {
+            Log::error('Bulk delete error', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -261,61 +349,6 @@ class CreditController extends Controller
             return redirect()->back()->with('error', 'Erreur lors de l\'ajout du paiement: ' . $e->getMessage());
         }
     }
-    public function bulkDelete(Request $request)
-    {
-        try {
-            // التحقق من صحة البيانات
-            $validated = $request->validate([
-                'ids' => 'required|array|min:1',
-                'ids.*' => 'required|integer|exists:credits,id'
-            ]);
-
-            $ids = $validated['ids'];
-
-            // استخدام transaction لضمان سلامة البيانات
-            DB::beginTransaction();
-
-            try {
-                // حذف الكريديات
-                $count = Credit::whereIn('id', $ids)->delete();
-
-                // يمكنك إضافة لوج للعملية
-                Log::info('Bulk delete credits', [
-                    'count' => $count,
-                    'ids' => $ids,
-                    'user_id' => auth()->id()
-                ]);
-
-                DB::commit();
-
-                return response()->json([
-                    'success' => true,
-                    'count' => $count,
-                    'message' => "$count crédit(s) supprimé(s) avec succès"
-                ], 200);
-            } catch (\Exception $e) {
-                DB::rollBack();
-                throw $e;
-            }
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Données invalides',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            Log::error('Bulk delete error', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erreur lors de la suppression: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
     /**
      * البحث في الكريديات (AJAX)
      */

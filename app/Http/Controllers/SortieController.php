@@ -61,9 +61,8 @@ class SortieController extends Controller
     }
     public function store(Request $request)
     {
-        // ✅ تغيير من product_id إلى produit_id
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',  // ✅ هنا التغيير
+            'product_id' => 'required|exists:products,id',
             'quantite' => 'required|integer|min:1',
             'nom_client' => 'required|string|max:255',
             'motif_sortie' => 'required|string',
@@ -71,21 +70,11 @@ class SortieController extends Controller
             'payment_mode' => 'required|in:cash,credit',
             'credit_paid_amount' => 'nullable|numeric|min:0',
             'credit_reason' => 'nullable|string|max:1000',
-        ], [
-            // ✅ رسائل خطأ مخصصة
-            'product_id.required' => 'Veuillez sélectionner un produit',
-            'product_id.exists' => 'Le produit sélectionné n\'existe pas',
-            'quantite.required' => 'La quantité est requise',
-            'quantite.min' => 'La quantité doit être au moins 1',
-            'nom_client.required' => 'Le nom du client est requis',
-            'motif_sortie.required' => 'Le motif de sortie est requis',
-            'payment_mode.required' => 'Le mode de paiement est requis',
         ]);
 
         try {
             DB::beginTransaction();
 
-            // ✅ استخدام produit_id من الـ validated
             $product = Product::where('id', $validated['product_id'])
                 ->where('user_id', auth()->id())
                 ->firstOrFail();
@@ -102,9 +91,35 @@ class SortieController extends Controller
                 ? ($validated['autre_motif'] ?? 'Autre')
                 : $validated['motif_sortie'];
 
-            // ✅ إنشاء Sortie - استخدام product_id (اسم العمود)
+            // ✅ إذا كان mode crédit، تحقق من وجود client
+            if ($validated['payment_mode'] === 'credit') {
+                $existingClient = Client::where('name', $validated['nom_client'])
+                    ->where('user_id', auth()->id())
+                    ->first();
+
+                // ✅ إذا كان Client موجود ولديه كريديات نشطة
+                if ($existingClient) {
+                    $activeCredit = Credit::where('client_id', $existingClient->id)
+                        ->where('user_id', auth()->id())
+                        ->where('status', '!=', 'paid')
+                        ->latest()
+                        ->first();
+
+                    if ($activeCredit) {
+                        // ✅ توجيه إلى صفحة تعديل الكريديت الموجود
+                        DB::rollBack();
+
+                        return redirect()->route('credits.edit', $activeCredit->id)
+                            ->with('info', "Le client '{$validated['nom_client']}' a déjà un crédit actif. Vous pouvez le modifier ici.")
+                            ->with('suggested_amount', $totalPrice)
+                            ->with('suggested_reason', "Sortie stock - {$motifFinal}");
+                    }
+                }
+            }
+
+            // ✅ إنشاء Sortie
             $sortie = Sortie::create([
-                'product_id' => $product->id,  // ✅ product_id في الجدول
+                'product_id' => $product->id,
                 'quantite' => $validated['quantite'],
                 'nom_client' => $validated['nom_client'],
                 'motif_sortie' => $motifFinal,
@@ -118,7 +133,7 @@ class SortieController extends Controller
 
             $successMessage = "Sortie enregistrée avec succès";
 
-            // Gestion du crédit
+            // ✅ إنشاء Crédit (Client جديد أو بدون كريديات نشطة)
             if ($validated['payment_mode'] === 'credit') {
                 $client = Client::firstOrCreate(
                     [
@@ -157,7 +172,7 @@ class SortieController extends Controller
                     ]);
                 }
 
-                $successMessage .= " et crédit créé pour {$validated['nom_client']} (Restant: " . number_format($remainingAmount, 2) . " DH)";
+                $successMessage .= " et crédit créé (Restant: " . number_format($remainingAmount, 2) . " DH)";
             } else {
                 $successMessage .= " (Paiement comptant: " . number_format($totalPrice, 2) . " DH)";
             }
@@ -172,11 +187,10 @@ class SortieController extends Controller
             Log::error('Sortie creation error', [
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
-                'data' => $request->all()
             ]);
 
             return redirect()->back()
-                ->with('error', 'Erreur lors de l\'enregistrement: ' . $e->getMessage())
+                ->with('error', 'Erreur: ' . $e->getMessage())
                 ->withInput();
         }
     }
