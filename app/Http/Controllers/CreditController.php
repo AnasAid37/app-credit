@@ -63,7 +63,6 @@ class CreditController extends Controller
         try {
             DB::beginTransaction();
 
-            // ✅ التحقق من وجود العميل بالاسم أولاً
             $existingClient = Client::where('name', $validated['client_name'])->first();
 
             if ($existingClient) {
@@ -80,18 +79,15 @@ class CreditController extends Controller
                 }
             }
 
-            // إنشاء عميل جديد
             $client = Client::create([
                 'name' => $validated['client_name'],
                 'phone' => $validated['client_phone'] ?? null,
                 'address' => $validated['client_address'] ?? null,
             ]);
 
-            // حساب المبالغ
             $paidAmount = $validated['paid_amount'] ?? 0;
             $remainingAmount = $validated['amount'] - $paidAmount;
 
-            // إنشاء الكريدي
             $credit = Credit::create([
                 'client_id' => $client->id,
                 'amount' => $validated['amount'],
@@ -102,7 +98,6 @@ class CreditController extends Controller
                 'created_by' => auth()->id(),
             ]);
 
-            // إضافة دفعة أولية إذا وجدت
             if ($paidAmount > 0) {
                 Payment::create([
                     'credit_id' => $credit->id,
@@ -208,16 +203,12 @@ class CreditController extends Controller
             $clientId = $credit->client_id;
             $clientName = $credit->client->name;
 
-            // حذف الـ payments
             $credit->payments()->delete();
 
-            // فك ارتباط sorties
             Sortie::where('credit_id', $credit->id)->update(['credit_id' => null]);
 
-            // حذف الـ credit
             $credit->delete();
 
-            // ✅ حذف Client إذا لم يكن له كريديات أخرى
             $clientHasOtherCredits = Credit::where('client_id', $clientId)->exists();
 
             if (!$clientHasOtherCredits) {
@@ -255,22 +246,17 @@ class CreditController extends Controller
             DB::beginTransaction();
 
             try {
-                // ✅ جمع client IDs قبل الحذف
                 $clientIds = Credit::whereIn('id', $ids)
                     ->pluck('client_id')
                     ->unique()
                     ->toArray();
 
-                // حذف payments
                 Payment::whereIn('credit_id', $ids)->delete();
 
-                // فك ارتباط sorties
                 Sortie::whereIn('credit_id', $ids)->update(['credit_id' => null]);
 
-                // حذف credits
                 $count = Credit::whereIn('id', $ids)->delete();
 
-                // ✅ حذف clients بدون كريديات
                 $deletedClients = 0;
                 foreach ($clientIds as $clientId) {
                     $hasCredits = Credit::where('client_id', $clientId)->exists();

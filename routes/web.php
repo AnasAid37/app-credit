@@ -11,7 +11,6 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SubscribeController;
 use Illuminate\Support\Facades\Route;
 
-// ============= المصادقة =============
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
@@ -24,12 +23,10 @@ Route::get('/home', function () {
     return redirect()->route('dashboard');
 });
 
-// ============= صفحة الاشتراك =============
 Route::middleware('auth')->group(function () {
     Route::get('/subscribe', [SubscribeController::class, 'show'])->name('subscribe.show');
 });
 
-// ============= صفحات Admin =============
 Route::prefix('admin')->middleware(['auth', 'check.access:admin'])->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.index');
     Route::post('/users/{user}/activate', [AdminController::class, 'activate'])->name('admin.activate');
@@ -37,17 +34,14 @@ Route::prefix('admin')->middleware(['auth', 'check.access:admin'])->group(functi
     Route::post('/users/{user}/extend', [AdminController::class, 'extend'])->name('admin.extend');
 });
 
-// ============= التطبيق العادي (محمي بالاشتراك) =============
 Route::middleware(['auth', 'check.access:user'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // الملف الشخصي
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::put('/profile/settings', [ProfileController::class, 'updateSettings'])->name('profile.settings');
 
-    // المنتجات
     Route::get('/products/import', [ProductController::class, 'showImportForm'])->name('products.import');
     Route::post('/products/import', [ProductController::class, 'import'])->name('products.import.post');
     Route::get('/products/template', [ProductController::class, 'downloadTemplate'])->name('products.template');
@@ -55,16 +49,13 @@ Route::middleware(['auth', 'check.access:user'])->group(function () {
     Route::post('/products/bulk-delete', [ProductController::class, 'bulkDelete'])->name('products.bulk-delete');
     Route::resource('products', ProductController::class);
 
-    // حركات المخزون
     Route::resource('sorties', SortieController::class)->except(['edit', 'update', 'destroy']);
     Route::get('/sortie-stock', [SortieController::class, 'create'])->name('sorties.create');
     Route::post('/sortie-stock', [SortieController::class, 'store'])->name('sorties.store');
 
-    // التنبيهات
     Route::get('/alerts', [AlertController::class, 'index'])->name('alerts.index');
     Route::get('/get-alert-count', [AlertController::class, 'getAlertCount'])->name('alerts.count');
 
-    // الكريديات
     // ===== Import / Export Crédits =====
     Route::get('/credits/import', [CreditController::class, 'showImport'])
         ->name('credits.import.form');

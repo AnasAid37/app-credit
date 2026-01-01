@@ -59,6 +59,7 @@ class SortieController extends Controller
 
         return view('sorties.create', compact('products'));
     }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -91,32 +92,6 @@ class SortieController extends Controller
                 ? ($validated['autre_motif'] ?? 'Autre')
                 : $validated['motif_sortie'];
 
-            // ✅ إذا كان mode crédit، تحقق من وجود client
-            if ($validated['payment_mode'] === 'credit') {
-                $existingClient = Client::where('name', $validated['nom_client'])
-                    ->where('user_id', auth()->id())
-                    ->first();
-
-                // ✅ إذا كان Client موجود ولديه كريديات نشطة
-                if ($existingClient) {
-                    $activeCredit = Credit::where('client_id', $existingClient->id)
-                        ->where('user_id', auth()->id())
-                        ->where('status', '!=', 'paid')
-                        ->latest()
-                        ->first();
-
-                    if ($activeCredit) {
-                        // ✅ توجيه إلى صفحة تعديل الكريديت الموجود
-                        DB::rollBack();
-
-                        return redirect()->route('credits.edit', $activeCredit->id)
-                            ->with('info', "Le client '{$validated['nom_client']}' a déjà un crédit actif. Vous pouvez le modifier ici.")
-                            ->with('suggested_amount', $totalPrice)
-                            ->with('suggested_reason', "Sortie stock - {$motifFinal}");
-                    }
-                }
-            }
-
             // ✅ إنشاء Sortie
             $sortie = Sortie::create([
                 'product_id' => $product->id,
@@ -133,7 +108,9 @@ class SortieController extends Controller
 
             $successMessage = "Sortie enregistrée avec succès";
 
-            // ✅ إنشاء Crédit (Client جديد أو بدون كريديات نشطة)
+            // ============================================
+            // ✅ معالجة الدفع بالكريديت
+            // ============================================
             if ($validated['payment_mode'] === 'credit') {
                 $client = Client::firstOrCreate(
                     [
@@ -146,41 +123,119 @@ class SortieController extends Controller
                     ]
                 );
 
+                // البحث عن كريديت نشط للعميل
+                $activeCredit = Credit::where('client_id', $client->id)
+                    ->where('user_id', auth()->id())
+                    ->where('status', '!=', 'paid')
+                    ->latest()
+                    ->first();
+
                 $paidAmount = $validated['credit_paid_amount'] ?? 0;
-                $remainingAmount = $totalPrice - $paidAmount;
+                $newDebt = $totalPrice - $paidAmount; // المبلغ الجديد المتبقي
 
-                $credit = Credit::create([
-                    'client_id' => $client->id,
-                    'amount' => $totalPrice,
-                    'paid_amount' => $paidAmount,
-                    'remaining_amount' => $remainingAmount,
-                    'reason' => $validated['credit_reason'] ?? "Sortie stock - {$motifFinal}",
-                    'status' => $remainingAmount <= 0 ? 'paid' : 'active',
-                    'user_id' => auth()->id(),
-                    'created_by' => auth()->id(),
-                ]);
+                if ($activeCredit) {
+                    // ============================================
+                    // ✅ تحديث الكريديت الموجود
+                    // ============================================
 
-                $sortie->update(['credit_id' => $credit->id]);
+                    $oldAmount = $activeCredit->amount;
+                    $oldRemaining = $activeCredit->remaining_amount;
 
-                if ($paidAmount > 0) {
-                    Payment::create([
-                        'credit_id' => $credit->id,
-                        'amount' => $paidAmount,
-                        'payment_date' => now(),
-                        'notes' => 'Paiement initial lors de la sortie de stock',
+                    // إضافة المبلغ الجديد
+                    $activeCredit->amount += $totalPrice;
+                    $activeCredit->remaining_amount += $newDebt;
+
+                    // إضافة السبب الجديد إلى السبب القديم
+                    $newReason = $validated['credit_reason'] ?? "Sortie stock - {$motifFinal}";
+                    $activeCredit->reason .= "\n➕ " . now()->format('d/m/Y H:i') . ": " . $newReason;
+
+                    // تحديث paid_amount إذا تم دفع مبلغ
+                    if ($paidAmount > 0) {
+                        $activeCredit->paid_amount += $paidAmount;
+                    }
+
+                    // تحديث الحالة إذا تم سداد كل شيء
+                    if ($activeCredit->remaining_amount <= 0) {
+                        $activeCredit->status = 'paid';
+                    }
+
+                    $activeCredit->save();
+
+                    // ربط الـ sortie بالكريديت
+                    $sortie->update(['credit_id' => $activeCredit->id]);
+
+                    // ✅ إنشاء payment إذا تم الدفع
+                    if ($paidAmount > 0) {
+                        Payment::create([
+                            'credit_id' => $activeCredit->id,
+                            'amount' => $paidAmount,
+                            'payment_date' => now(),
+                            'notes' => "Paiement lors de la sortie - {$motifFinal}",
+                            'created_by' => auth()->id(),
+                        ]);
+                    }
+
+                    Log::info('Crédit mis à jour automatiquement', [
+                        'credit_id' => $activeCredit->id,
+                        'client' => $client->name,
+                        'old_amount' => $oldAmount,
+                        'new_amount' => $activeCredit->amount,
+                        'old_remaining' => $oldRemaining,
+                        'new_remaining' => $activeCredit->remaining_amount,
+                        'added_amount' => $totalPrice,
+                        'paid_now' => $paidAmount,
+                    ]);
+
+                    $successMessage .= " et crédit mis à jour (Ajouté: " . number_format($totalPrice, 2) . " DH, Restant total: " . number_format($activeCredit->remaining_amount, 2) . " DH)";
+                } else {
+                    // ============================================
+                    // ✅ إنشاء كريديت جديد (العميل ليس لديه كريديت نشط)
+                    // ============================================
+
+                    $credit = Credit::create([
+                        'client_id' => $client->id,
+                        'amount' => $totalPrice,
+                        'paid_amount' => $paidAmount,
+                        'remaining_amount' => $newDebt,
+                        'reason' => $validated['credit_reason'] ?? "Sortie stock - {$motifFinal}",
+                        'status' => $newDebt <= 0 ? 'paid' : 'active',
+                        'user_id' => auth()->id(),
                         'created_by' => auth()->id(),
                     ]);
-                }
 
-                $successMessage .= " et crédit créé (Restant: " . number_format($remainingAmount, 2) . " DH)";
+                    $sortie->update(['credit_id' => $credit->id]);
+
+                    if ($paidAmount > 0) {
+                        Payment::create([
+                            'credit_id' => $credit->id,
+                            'amount' => $paidAmount,
+                            'payment_date' => now(),
+                            'notes' => 'Paiement initial lors de la sortie de stock',
+                            'created_by' => auth()->id(),
+                        ]);
+                    }
+
+                    $successMessage .= " et crédit créé (Restant: " . number_format($newDebt, 2) . " DH)";
+                }
             } else {
+                // الدفع نقداً
                 $successMessage .= " (Paiement comptant: " . number_format($totalPrice, 2) . " DH)";
             }
 
             DB::commit();
 
-            return redirect()->route('sorties.index')
-                ->with('success', $successMessage);
+            // ✅ التوجيه حسب نوع الدفع
+            if ($validated['payment_mode'] === 'credit') {
+                // إذا كان دفع بالكريديت، التوجيه إلى صفحة عرض الكريديت
+                $creditId = $activeCredit->id ?? $credit->id;
+
+                return redirect()->route('credits.show', $creditId)
+                    ->with('success', $successMessage);
+            } else {
+                // إذا كان دفع نقداً، التوجيه إلى قائمة الخروجات
+                return redirect()->route('sorties.index')
+                    ->with('success', $successMessage);
+            }
         } catch (\Exception $e) {
             DB::rollBack();
 

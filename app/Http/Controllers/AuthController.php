@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    // دوال تسجيل الدخول الحالية
     public function showLoginForm()
     {
         return view('auth.login');
@@ -41,7 +40,6 @@ class AuthController extends Controller
         return redirect('/');
     }
 
-    // دوال التسجيل الجديدة
     public function showRegisterForm()
     {
         return view('auth.register');
