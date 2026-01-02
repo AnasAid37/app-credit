@@ -1333,6 +1333,111 @@
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 5000);
             }
+
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input');
+            const clearSearchBtn = document.getElementById('clear-search');
+            const tableBody = document.getElementById('credits-table-body');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const searchResultsCount = document.getElementById('search-results-count');
+            const resultsCount = document.getElementById('results-count');
+
+            let searchTimeout = null;
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    const searchValue = this.value.trim();
+
+                    if (searchValue.length === 0) {
+                        // إعادة تحميل الصفحة إذا كان البحث فارغاً
+                        window.location.href = "{{ route('credits.index') }}";
+                        return;
+                    }
+
+                    if (searchValue.length < 2) {
+                        return; // لا تبحث إذا كان أقل من حرفين
+                    }
+
+                    // تأخير البحث بـ 500ms
+                    searchTimeout = setTimeout(() => {
+                        performSearch(searchValue);
+                    }, 500);
+                });
+            }
+
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', function() {
+                    searchInput.value = '';
+                    window.location.href = "{{ route('credits.index') }}";
+                });
+            }
+
+            function performSearch(searchValue) {
+                // عرض Loading
+                if (loadingIndicator) {
+                    loadingIndicator.classList.remove('d-none');
+                }
+
+                fetch("{{ route('credits.search') }}?search=" + encodeURIComponent(searchValue), {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // تحديث الجدول
+                            tableBody.innerHTML = data.html;
+
+                            // عرض عدد النتائج
+                            if (resultsCount && searchResultsCount) {
+                                resultsCount.textContent = data.count;
+                                searchResultsCount.classList.remove('d-none');
+                            }
+
+                            // إخفاء pagination أثناء البحث
+                            const paginationWrapper = document.querySelector('.pagination-wrapper-modern');
+                            if (paginationWrapper) {
+                                paginationWrapper.style.display = 'none';
+                            }
+                        } else {
+                            showErrorToast(data.message || 'Erreur lors de la recherche');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                        showErrorToast('Erreur de connexion');
+                    })
+                    .finally(() => {
+                        if (loadingIndicator) {
+                            loadingIndicator.classList.add('d-none');
+                        }
+                    });
+            }
+
+            function showErrorToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'alert-success-toast';
+                toast.style.borderLeftColor = 'var(--danger-color)';
+                toast.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="stat-icon danger me-3" style="width: 40px; height: 40px; font-size: 1rem; margin-bottom: 0;">
+                    <i class="fas fa-times"></i>
+                </div>
+                <div>
+                    <div class="fw-bold">Erreur!</div>
+                    <div class="text-muted small">${message}</div>
+                </div>
+                <button type="button" class="btn-close ms-3" onclick="this.parentElement.parentElement.remove()"></button>
+            </div>
+        `;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 5000);
+            }
         });
     </script>
 @endsection

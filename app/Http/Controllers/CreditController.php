@@ -126,8 +126,64 @@ class CreditController extends Controller
      */
     public function show(Credit $credit)
     {
-        $credit->load(['client', 'creator', 'payments.creator']);
-        return view('credits.show', compact('credit'));
+        // التحقق من الملكية
+        if ($credit->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        // ✅ إحصائيات الكريديت
+        $creditStats = [
+            'total_credits' => Credit::where('user_id', auth()->id())->count(),
+            'paid_credits' => Credit::where('user_id', auth()->id())
+                ->where('status', 'paid')
+                ->count(),
+            'pending_credits' => Credit::where('user_id', auth()->id())
+                ->where('status', 'pending')
+                ->count(),
+            'total_remaining' => Credit::where('user_id', auth()->id())
+                ->sum('remaining_amount'),
+        ];
+
+        // ✅ Top 5 منتجات مرتبطة بهذا الكريديت
+        $topProducts = Sortie::where('user_id', auth()->id())
+            ->where('credit_id', $credit->id)
+            ->with('product')
+            ->select('product_id', DB::raw('SUM(quantite) as total_quantity'), DB::raw('SUM(total_price) as total_value'))
+            ->groupBy('product_id')
+            ->orderBy('total_quantity', 'desc')
+            ->limit(5)
+            ->get();
+
+        // ✅ إحصائيات شهرية لهذا الكريديت
+        $monthlyStats = Payment::where('credit_id', $credit->id)
+            ->selectRaw('MONTH(created_at) as month, YEAR(created_at) as year, SUM(amount) as total')
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->limit(6)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'month' => date('M Y', mktime(0, 0, 0, $item->month, 1, $item->year)),
+                    'total' => $item->total
+                ];
+            });
+
+        // ✅ كريديات أخرى للعميل
+        $otherCredits = Credit::where('client_id', $credit->client_id)
+            ->where('id', '!=', $credit->id)
+            ->where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        return view('credits.show', compact(
+            'credit',
+            'creditStats',
+            'topProducts',
+            'monthlyStats',
+            'otherCredits'
+        ));
     }
 
     /**
@@ -344,11 +400,10 @@ class CreditController extends Controller
             $search = $request->input('search', '');
 
             $credits = Credit::with('client')
+                ->where('user_id', auth()->id()) // ✅ إضافة فلتر المستخدم
                 ->when($search, function ($query) use ($search) {
                     $query->where(function ($q) use ($search) {
-                        $q->where('client_name', 'like', "%{$search}%")
-                            ->orWhere('client_phone', 'like', "%{$search}%")
-                            ->orWhere('reason', 'like', "%{$search}%")
+                        $q->where('reason', 'like', "%{$search}%")
                             ->orWhereHas('client', function ($clientQuery) use ($search) {
                                 $clientQuery->where('name', 'like', "%{$search}%")
                                     ->orWhere('phone', 'like', "%{$search}%");
@@ -367,7 +422,8 @@ class CreditController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Search error', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
             ]);
 
             return response()->json([
