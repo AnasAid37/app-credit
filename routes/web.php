@@ -9,6 +9,7 @@ use App\Http\Controllers\SortieController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SubscribeController;
+use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
@@ -41,6 +42,7 @@ Route::middleware(['auth', 'check.access:user'])->group(function () {
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::put('/profile/settings', [ProfileController::class, 'updateSettings'])->name('profile.settings');
+    Route::resource('categories', CategoryController::class);
 
     Route::get('/products/import', [ProductController::class, 'showImportForm'])->name('products.import');
     Route::post('/products/import', [ProductController::class, 'import'])->name('products.import.post');

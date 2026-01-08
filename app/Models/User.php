@@ -32,9 +32,6 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-
-
-
     // ==================== العلاقات ====================
 
     public function profile()
@@ -56,6 +53,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(Credit::class, 'user_id');
     }
+
+    // ✅ علاقة Categories (مهمة!)
+    public function categories()
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    // ==================== دوال الاشتراك ====================
+
     public function canUseApp()
     {
         if (!$this->is_active) return false;

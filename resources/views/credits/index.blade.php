@@ -815,7 +815,7 @@
                 Recherche
             </h6>
             <div class="row">
-                <div class="col-12">
+                <div class="col-6">
                     <div class="input-group">
                         <span class="input-group-text">
                             <i class="fas fa-search"></i>
@@ -832,6 +832,17 @@
                             <span id="results-count">0</span> résultat(s) trouvé(s)
                         </span>
                     </div>
+                </div>
+                <div class="col-6">
+                    <label for="" class="form-label">
+                        <i class="fas fa-folder me-1"></i> Etat
+                    </label>
+                    <select class="form-select" id="status-filter">
+                        <option value="">-- Tous les états --</option>
+                        <option value="paid">Payé</option>
+                        <option value="pending">En Cours</option>
+                        <option value="">En attente</option>
+                    </select>
                 </div>
             </div>
         </div>

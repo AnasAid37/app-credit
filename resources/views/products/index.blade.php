@@ -531,6 +531,37 @@
                 flex-direction: column;
             }
         }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .action-btn-view {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .action-btn-view:hover {
+            background: #3b82f6;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+        }
+
+        .table-modern thead th:last-child,
+        .table-modern tbody td:last-child {
+            text-align: center;
+            width: 80px;
+        }
     </style>
 @endpush
 
@@ -594,7 +625,7 @@
                 </div>
 
                 <!-- Tri -->
-                <div class="col-lg-3 col-md-6">
+                <div class="col-lg-2 col-md-6">
                     <label class="form-label fw-500">Trier par</label>
                     <select class="form-select" name="sort">
                         <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Date d'ajout
@@ -605,9 +636,24 @@
                         <option value="quantite" {{ request('sort') == 'quantite' ? 'selected' : '' }}>Quantité</option>
                     </select>
                 </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label fw-500">
+                        <i class="fas fa-folder me-1"></i>
+                        Catégorie
+                    </label>
+                    <select class="form-select" name="category_id" onchange="this.form.submit()">
+                        <option value="">Toutes les catégories</option>
+                        @foreach ($categories as $cat)
+                            <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}
+                                style="color: {{ $cat->couleur }}">
+                                {{ $cat->nom }} ({{ $cat->products_count }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
                 <!-- Ordre -->
-                <div class="col-lg-3 col-md-6">
+                <div class="col-lg-2 col-md-6">
                     <label class="form-label fw-500">Ordre</label>
                     <div class="input-group">
                         <select class="form-select" name="order">
@@ -796,6 +842,12 @@
                                             </button>
                                         </div>
                                     </td>
+                                    <td>
+                                        <a href="{{ route('products.show', $product->id) }}"
+                                            class="action-btn action-btn-edit" title="Voir les détails">
+                                            <i class="fas fa-eye"></i>
+                                    </td>
+
                                 </tr>
                             @endforeach
                         </tbody>
@@ -1376,8 +1428,13 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         @keyframes slideUp {
@@ -1385,6 +1442,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -1392,8 +1450,13 @@
         }
 
         @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
         }
     </style>
 @endsection

@@ -11,17 +11,21 @@ use App\Models\Client;
 use App\Models\Credit;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Log;
-
+use App\Models\Category;
 
 class SortieController extends Controller
 {
     public function index(Request $request)
     {
-        // ✅ فلترة حسب المستخدم الحالي
-        $query = Sortie::with(['product', 'user', 'credit'])
+        $query = Sortie::with(['product.category', 'user', 'credit'])
             ->where('user_id', auth()->id());
 
-        // تطبيق الفلاتر
+        if ($request->filled('category_id')) {
+            $query->whereHas('product', function ($q) use ($request) {
+                $q->where('category_id', $request->category_id);
+            });
+        }
+
         if ($request->filled('date_debut')) {
             $query->whereDate('created_at', '>=', $request->date_debut);
         }
@@ -31,28 +35,25 @@ class SortieController extends Controller
         }
 
         if ($request->filled('nom_client')) {
-            $query->where('nom_client', 'like', "%{$request->nom_client}%");
+            $query->where('nom_client', 'like', '%' . $request->nom_client . '%');
         }
 
         if ($request->filled('motif_sortie')) {
-            $query->where('motif_sortie', 'like', "%{$request->motif_sortie}%");
+            $query->where('motif_sortie', $request->motif_sortie);
         }
 
-        // حساب الإحصائيات
-        $stats = [
-            'total_quantity' => $query->sum('quantite'),
-            'total_amount' => $query->sum('total_price'),
-            'total_count' => $query->count(),
-        ];
+        $sorties = $query->orderBy('created_at', 'desc')->paginate(20);
 
-        $sorties = $query->orderBy('created_at', 'desc')->paginate(10);
+        $categories = Category::where('user_id', auth()->id())
+            ->where('actif', true)
+            ->orderBy('nom')
+            ->get();
 
-        return view('sorties.index', compact('sorties', 'stats'));
+        return view('sorties.index', compact('sorties', 'categories'));
     }
 
     public function create()
     {
-        // ✅ فلترة المنتجات حسب المستخدم
         $products = Product::where('user_id', auth()->id())
             ->where('quantite', '>', 0)
             ->get();
@@ -92,7 +93,6 @@ class SortieController extends Controller
                 ? ($validated['autre_motif'] ?? 'Autre')
                 : $validated['motif_sortie'];
 
-            // ✅ إنشاء Sortie
             $sortie = Sortie::create([
                 'product_id' => $product->id,
                 'quantite' => $validated['quantite'],
@@ -108,9 +108,6 @@ class SortieController extends Controller
 
             $successMessage = "Sortie enregistrée avec succès";
 
-            // ============================================
-            // ✅ معالجة الدفع بالكريديت
-            // ============================================
             if ($validated['payment_mode'] === 'credit') {
                 $client = Client::firstOrCreate(
                     [
@@ -123,7 +120,6 @@ class SortieController extends Controller
                     ]
                 );
 
-                // البحث عن كريديت نشط للعميل
                 $activeCredit = Credit::where('client_id', $client->id)
                     ->where('user_id', auth()->id())
                     ->where('status', '!=', 'paid')
@@ -131,40 +127,29 @@ class SortieController extends Controller
                     ->first();
 
                 $paidAmount = $validated['credit_paid_amount'] ?? 0;
-                $newDebt = $totalPrice - $paidAmount; // المبلغ الجديد المتبقي
+                $newDebt = $totalPrice - $paidAmount;
 
                 if ($activeCredit) {
-                    // ============================================
-                    // ✅ تحديث الكريديت الموجود
-                    // ============================================
-
                     $oldAmount = $activeCredit->amount;
                     $oldRemaining = $activeCredit->remaining_amount;
 
-                    // إضافة المبلغ الجديد
                     $activeCredit->amount += $totalPrice;
                     $activeCredit->remaining_amount += $newDebt;
 
-                    // إضافة السبب الجديد إلى السبب القديم
                     $newReason = $validated['credit_reason'] ?? "Sortie stock - {$motifFinal}";
                     $activeCredit->reason .= "\n➕ " . now()->format('d/m/Y H:i') . ": " . $newReason;
 
-                    // تحديث paid_amount إذا تم دفع مبلغ
                     if ($paidAmount > 0) {
                         $activeCredit->paid_amount += $paidAmount;
                     }
 
-                    // تحديث الحالة إذا تم سداد كل شيء
                     if ($activeCredit->remaining_amount <= 0) {
                         $activeCredit->status = 'paid';
                     }
 
                     $activeCredit->save();
-
-                    // ربط الـ sortie بالكريديت
                     $sortie->update(['credit_id' => $activeCredit->id]);
 
-                    // ✅ إنشاء payment إذا تم الدفع
                     if ($paidAmount > 0) {
                         Payment::create([
                             'credit_id' => $activeCredit->id,
@@ -188,10 +173,6 @@ class SortieController extends Controller
 
                     $successMessage .= " et crédit mis à jour (Ajouté: " . number_format($totalPrice, 2) . " DH, Restant total: " . number_format($activeCredit->remaining_amount, 2) . " DH)";
                 } else {
-                    // ============================================
-                    // ✅ إنشاء كريديت جديد (العميل ليس لديه كريديت نشط)
-                    // ============================================
-
                     $credit = Credit::create([
                         'client_id' => $client->id,
                         'amount' => $totalPrice,
@@ -218,21 +199,16 @@ class SortieController extends Controller
                     $successMessage .= " et crédit créé (Restant: " . number_format($newDebt, 2) . " DH)";
                 }
             } else {
-                // الدفع نقداً
                 $successMessage .= " (Paiement comptant: " . number_format($totalPrice, 2) . " DH)";
             }
 
             DB::commit();
 
-            // ✅ التوجيه حسب نوع الدفع
             if ($validated['payment_mode'] === 'credit') {
-                // إذا كان دفع بالكريديت، التوجيه إلى صفحة عرض الكريديت
                 $creditId = $activeCredit->id ?? $credit->id;
-
                 return redirect()->route('credits.show', $creditId)
                     ->with('success', $successMessage);
             } else {
-                // إذا كان دفع نقداً، التوجيه إلى قائمة الخروجات
                 return redirect()->route('sorties.index')
                     ->with('success', $successMessage);
             }
@@ -250,11 +226,29 @@ class SortieController extends Controller
         }
     }
 
-
-
-    public function show(Sortie $sortie)
+    // ✅ الحل: استخدام ID بدلاً من Route Model Binding
+    public function show($id)
     {
-        $sortie->load(['product', 'credit.client', 'credit.payments']);
+        // ✅ جلب الـ sortie مع جميع العلاقات مباشرة
+        $sortie = Sortie::with([
+            'product.category',
+            'user',
+            'credit.client',
+            'credit.payments'
+        ])
+        ->where('user_id', auth()->id())
+        ->findOrFail($id);
+
+        // 🔍 Debug Log
+        Log::info('Sortie Show', [
+            'sortie_id' => $sortie->id,
+            'product_id' => $sortie->product_id,
+            'has_product' => $sortie->product !== null,
+            'product_marque' => optional($sortie->product)->marque,
+            'user_id' => $sortie->user_id,
+            'has_user' => $sortie->user !== null,
+        ]);
+
         return view('sorties.show', compact('sortie'));
     }
 

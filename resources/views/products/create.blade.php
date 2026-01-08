@@ -282,17 +282,35 @@
                             Informations de base
                         </div>
                         <div class="alert alert-info border-0 shadow-sm mb-4">
-                        <div class="d-flex align-items-start">
-                            <i class="fas fa-info-circle fa-2x me-3 text-info"></i>
-                            <div>
-                                <h6 class="alert-heading mb-2">Information importante</h6>
-                                <p class="mb-0">
-                                    si vous ajoutez un produit qui existe déjà (même marque et taille), le système mettra à jour
-                                    simplement la quantité en stock au lieu de créer une nouvelle entrée.
-                                </p>
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-info-circle fa-2x me-3 text-info"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-2">Information importante</h6>
+                                    <p class="mb-0">
+                                        si vous ajoutez un produit qui existe déjà (même marque et taille), le système
+                                        mettra à jour
+                                        simplement la quantité en stock au lieu de créer une nouvelle entrée.
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">Catégorie</label>
+                            <select name="category_id" class="form-select">
+                                <option value="">-- Sélectionnez une catégorie --</option>
+                                @foreach (\App\Models\Category::where('user_id', auth()->id())->where('actif', true)->orderBy('nom')->get() as $cat)
+                                    <option value="{{ $cat->id }}"
+                                        {{ old('category_id', $product->category_id ?? '') == $cat->id ? 'selected' : '' }}>
+                                        <i class="{{ $cat->icone }}"></i> {{ $cat->nom }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i>
+                                Vous pouvez gérer les catégories dans la section
+                                <a href="{{ route('categories.create') }}" target="_blank">Ajouter une nouvelle catégorie</a>
+                            </small>
+                        </div>
 
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">

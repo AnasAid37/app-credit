@@ -788,6 +788,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a href="{{ route("categories.index") }}" class="nav-link {{ request()->routeIs('categories.index') ? 'active' : '' }}" data-title="Catégories">
+                                <i class="fas fa-tags"></i>
+                                <span>Catégories</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="{{ route('alerts.index') }}" id="alertesLink"
                                 class="nav-link {{ request()->routeIs('alerts.index') ? 'active' : '' }}"
                                 data-title="Alertes">

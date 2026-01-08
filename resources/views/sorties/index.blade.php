@@ -491,6 +491,37 @@
                 font-size: 0.875rem;
             }
         }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .action-btn-view {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .action-btn-view:hover {
+            background: #3b82f6;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+        }
+
+        .table-modern thead th:last-child,
+        .table-modern tbody td:last-child {
+            text-align: center;
+            width: 80px;
+        }
     </style>
 @endpush
 
@@ -586,18 +617,30 @@
                         <input type="date" class="form-control" id="date_fin" name="date_fin"
                             value="{{ request('date_fin') }}">
                     </div>
-
-                    <!-- Nom du client -->
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-lg-2 col-md-6">
                         <label for="nom_client" class="form-label">
                             <i class="fas fa-user me-1"></i> Nom du client
                         </label>
                         <input type="text" class="form-control" id="nom_client" name="nom_client"
                             placeholder="Rechercher un client..." value="{{ request('nom_client') }}">
                     </div>
-
+                    <div class="col-lg-2 col-md-6">
+                        <label for="category_id" class="form-label">
+                            <i class="fas fa-folder me-1"></i> Catégorie
+                        </label>
+                        <select class="form-select" id="category_id" name="category_id">
+                            <option value="">-- Toutes les catégories --</option>
+                            @foreach ($categories as $cat)
+                                <option value="{{ $cat->id }}"
+                                    {{ request('category_id') == $cat->id ? 'selected' : '' }}>
+                                    <i class="{{ $cat->icone }}"></i> {{ $cat->nom }}
+                                    ({{ $cat->products_count }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     <!-- Motif de sortie -->
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-lg-2 col-md-6">
                         <label for="motif_sortie" class="form-label">
                             <i class="fas fa-tag me-1"></i> Motif de sortie
                         </label>
@@ -685,6 +728,7 @@
                                 <th><i class="fas fa-user me-1"></i> Client</th>
                                 <th><i class="fas fa-clipboard me-1"></i> Motif</th>
                                 <th><i class="fas fa-user-tie me-1"></i> Utilisateur</th>
+                                <th><i class="fas fa-cog me-1"></i> Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -778,6 +822,12 @@
                                             <i class="fas fa-user-check me-1"></i>
                                             {{ $sortie->user->nom ?? ($sortie->user->name ?? 'N/A') }}
                                         </small>
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('sorties.show', $sortie->id) }}"
+                                            class="action-btn action-btn-view" title="Voir les détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             @endforeach

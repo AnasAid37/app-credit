@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -11,33 +12,68 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        // ✅ فلترة حسب المستخدم الحالي
-        $query = Product::where('user_id', auth()->id());
+        $query = Product::with('category')->where('user_id', auth()->id());
 
-        // البحث
-        if ($request->has('search') && !empty($request->search)) {
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('price', 'like', "%{$search}%")
-                    ->orWhere('taille', 'like', "%{$search}%")
-                    ->orWhere('marque', 'like', "%{$search}%");
+                  ->orWhere('taille', 'like', "%{$search}%")
+                  ->orWhere('marque', 'like', "%{$search}%");
             });
         }
 
-        // الترتيب
-        $sort = $request->get('sort', 'created_at');
-        $order = $request->get('order', 'DESC');
+        $sortColumn = $request->get('sort', 'created_at');
+        $sortOrder = $request->get('order', 'DESC');
+        $query->orderBy($sortColumn, $sortOrder);
 
-        $allowedSorts = ['price', 'taille', 'marque', 'quantite', 'created_at'];
-        if (!in_array($sort, $allowedSorts)) {
-            $sort = 'created_at';
+        $products = $query->paginate(20);
+
+        $products->getCollection()->transform(function ($product) {
+            if ($product->quantite == 0) {
+                $product->stock_status = 'danger';
+            } elseif ($product->quantite <= $product->seuil_alerte) {
+                $product->stock_status = 'warning';
+            } else {
+                $product->stock_status = 'success';
+            }
+            return $product;
+        });
+
+        $categories = Category::where('user_id', auth()->id())
+            ->where('actif', true)
+            ->withCount('products')
+            ->orderBy('nom')
+            ->get();
+
+        return view('products.index', compact('products', 'categories'));
+    }
+
+    /**
+     * ✅ عرض تفاصيل المنتج
+     */
+    public function show(Product $product)
+    {
+        // ✅ تحميل العلاقات (حذفنا entrees لأنها غير موجودة)
+        $product->load('category', 'sorties.credit');
+        
+        // حساب حالة المخزون
+        if ($product->quantite == 0) {
+            $product->stock_status = 'danger';
+            $product->stock_status_text = 'Rupture de stock';
+        } elseif ($product->quantite <= $product->seuil_alerte) {
+            $product->stock_status = 'warning';
+            $product->stock_status_text = 'Stock faible';
+        } else {
+            $product->stock_status = 'success';
+            $product->stock_status_text = 'En stock';
         }
-
-        $query->orderBy($sort, $order);
-
-        $products = $query->paginate(15);
-
-        return view('products.index', compact('products'));
+        
+        return view('products.show', compact('product'));
     }
 
     public function create()
@@ -59,7 +95,6 @@ class ProductController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // التحقق من وجود منتج بنفس الماركة والحجم
         $existingProduct = Product::where('taille', $request->taille)
             ->where('marque', $request->marque)
             ->first();
@@ -95,7 +130,6 @@ class ProductController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // التحقق من وجود منتج آخر بنفس الماركة والحجم
         $existingProduct = Product::where('taille', $request->taille)
             ->where('marque', $request->marque)
             ->where('id', '!=', $product->id)
@@ -118,7 +152,6 @@ class ProductController extends Controller
         try {
             DB::beginTransaction();
 
-            // حذف حركات المخزون المرتبطة
             $product->sorties()->delete();
             $product->delete();
 
@@ -131,9 +164,6 @@ class ProductController extends Controller
         }
     }
 
-    /**
-     * Suppression en masse
-     */
     public function bulkDelete(Request $request)
     {
         $request->validate([
@@ -156,7 +186,8 @@ class ProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "{$count} produit(s) supprimé(s) avec succès"
+                'message' => "{$count} produit(s) supprimé(s) avec succès",
+                'count' => $count
             ]);
         } catch (\Exception $e) {
             DB::rollback();
@@ -167,17 +198,11 @@ class ProductController extends Controller
         }
     }
 
-    /**
-     * Afficher le formulaire d'import
-     */
     public function showImportForm()
     {
         return view('products.import');
     }
 
-    /**
-     * Importer depuis CSV
-     */
     public function import(Request $request)
     {
         $request->validate([
@@ -192,7 +217,6 @@ class ProductController extends Controller
             $file = $request->file('file');
             $path = $file->getRealPath();
 
-            // Lire avec encodage UTF-8
             $content = file_get_contents($path);
             if (!mb_check_encoding($content, 'UTF-8')) {
                 $content = mb_convert_encoding($content, 'UTF-8', 'auto');
@@ -224,7 +248,6 @@ class ProductController extends Controller
                     $quantite = (int) ($row[3] ?? 0);
                     $seuil_alerte = (int) ($row[4] ?? 5);
 
-                    // Validation
                     if (empty($taille)) {
                         $errors[] = "Ligne {$lineNumber}: Taille requise";
                         continue;
@@ -235,13 +258,11 @@ class ProductController extends Controller
                         continue;
                     }
 
-                    // Chercher produit existant
                     $product = Product::where('price', $price)
                         ->where('taille', $taille)
                         ->first();
 
                     if ($product) {
-                        // Mettre à jour
                         $product->update([
                             'marque' => $marque ?: $product->marque,
                             'quantite' => $quantite,
@@ -249,7 +270,6 @@ class ProductController extends Controller
                         ]);
                         $updated++;
                     } else {
-                        // Créer nouveau
                         Product::create([
                             'price' => $price,
                             'taille' => $taille,
@@ -282,9 +302,6 @@ class ProductController extends Controller
         }
     }
 
-    /**
-     * Télécharger le modèle CSV
-     */
     public function downloadTemplate()
     {
         $fileName = 'modele_produits.csv';
@@ -307,7 +324,6 @@ class ProductController extends Controller
                 'Seuil Alerte'
             ]);
 
-            // Exemples
             fputcsv($file, ['299.99', '42', 'Nike', '50', '10']);
             fputcsv($file, ['450.00', '40', 'Adidas', '30', '5']);
             fputcsv($file, ['199.50', '38', 'Puma', '20', '8']);
@@ -318,9 +334,6 @@ class ProductController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    /**
-     * Exporter en CSV
-     */
     public function export(Request $request)
     {
         $products = Product::orderBy('created_at', 'desc')->get();
@@ -356,7 +369,7 @@ class ProductController extends Controller
                     $product->marque ?? '',
                     $product->quantite,
                     $product->seuil_alerte,
-                    $product->stock_status_text,
+                    $product->stock_status_text ?? 'N/A',
                     $product->created_at->format('d/m/Y H:i')
                 ]);
             }

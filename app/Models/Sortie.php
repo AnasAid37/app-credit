@@ -19,6 +19,14 @@ class Sortie extends Model
         'created_by',
     ];
 
+    // ✅ تعريف الحقول التي يجب تحويلها
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'quantite' => 'integer',
+        'total_price' => 'decimal:2',
+    ];
+
     /**
      * ✅ تطبيق Global Scope
      */
@@ -36,6 +44,7 @@ class Sortie extends Model
         });
     }
 
+    // ✅ العلاقات
     public function product()
     {
         return $this->belongsTo(Product::class);
@@ -56,6 +65,7 @@ class Sortie extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    // ✅ Helper Methods
     public function isCredit(): bool
     {
         return $this->payment_mode === 'credit';

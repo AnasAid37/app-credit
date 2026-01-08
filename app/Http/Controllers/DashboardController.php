@@ -7,6 +7,7 @@ use App\Models\Sortie;
 use App\Models\Credit;
 use App\Models\Client;
 use App\Models\Payment;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -18,43 +19,47 @@ class DashboardController extends Controller
         if (!auth()->check()) {
             return redirect()->route('login');
         }
-        // ==================== إحصائيات المخزون ====================
-        $totalProducts = Product::count();
-        $lowStockProducts = Product::where('quantite', '<=', DB::raw('seuil_alerte'))
+
+        $userId = Auth::id();
+
+        // ===== إحصائيات المنتجات =====
+        $totalProducts = Product::where('user_id', $userId)->count();
+        $lowStockProducts = Product::where('user_id', $userId)
+            ->where('quantite', '<=', DB::raw('seuil_alerte'))
             ->where('quantite', '>', 0)
             ->count();
-        $outOfStockProducts = Product::where('quantite', 0)->count();
+        $outOfStockProducts = Product::where('user_id', $userId)
+            ->where('quantite', 0)
+            ->count();
         $goodStockProducts = $totalProducts - $lowStockProducts - $outOfStockProducts;
-        $totalQuantity = Product::sum('quantite');
+        $totalQuantity = Product::where('user_id', $userId)->sum('quantite');
 
-        // المنتجات في حالة إنذار
-        $alertProducts = Product::where('quantite', '<=', DB::raw('seuil_alerte'))
-            ->orderBy('quantite')
+        // ===== إحصائيات الكريديت =====
+        $totalCredits = Credit::where('user_id', $userId)->count();
+        $totalAmount = Credit::where('user_id', $userId)->sum('amount');
+        $activeCredits = Credit::where('user_id', $userId)
+            ->where('status', 'active')
+            ->count();
+        $activeAmount = Credit::where('user_id', $userId)
+            ->where('status', 'active')
+            ->sum('amount');
+        $totalRemaining = Credit::where('user_id', $userId)->sum('remaining_amount');
+
+        // ===== إحصائيات الفئات =====
+        $totalCategories = Category::where('user_id', $userId)
+            ->where('actif', true)
+            ->count();
+        
+        $categoriesData = Category::where('user_id', $userId)
+            ->where('actif', true)
+            ->withCount('products')
+            ->orderBy('products_count', 'desc')
             ->limit(5)
             ->get();
 
-        // آخر حركات المخزون
-        $recentMovements = Sortie::with(['product', 'user'])
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
-
-        // ==================== إحصائيات الائتمانات ====================
-        $totalCredits = Credit::count();
-        $totalAmount = Credit::sum('amount');
-        $activeCredits = Credit::where('status', 'active')->count();
-        $activeAmount = Credit::where('status', 'active')->sum('amount');
-        $totalRemaining = Credit::sum('remaining_amount');
-
-        // Crédits récents (7 derniers jours)
-        $recentCredits = Credit::with('client')
-            ->where('created_at', '>=', now()->subDays(7))
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
-
-        // Données mensuelles pour les graphiques - مع إضافة المبلغ المتبقي
-        $monthlyData = Credit::selectRaw('
+        // ===== البيانات الشهرية للكريديت =====
+        $monthlyData = Credit::where('user_id', $userId)
+            ->selectRaw('
                 MONTH(created_at) as month, 
                 COUNT(*) as count, 
                 SUM(amount) as total,
@@ -67,18 +72,9 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($item) {
                 $monthNames = [
-                    1 => 'Jan',
-                    2 => 'Fév',
-                    3 => 'Mar',
-                    4 => 'Avr',
-                    5 => 'Mai',
-                    6 => 'Juin',
-                    7 => 'Juil',
-                    8 => 'Août',
-                    9 => 'Sep',
-                    10 => 'Oct',
-                    11 => 'Nov',
-                    12 => 'Déc'
+                    1 => 'Jan', 2 => 'Fév', 3 => 'Mar', 4 => 'Avr',
+                    5 => 'Mai', 6 => 'Juin', 7 => 'Juil', 8 => 'Août',
+                    9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Déc'
                 ];
                 return [
                     'month' => $monthNames[$item->month],
@@ -89,16 +85,39 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Top 5 des clients
-        $topClients = Client::withCount('credits')
+        // ===== أفضل العملاء =====
+        $topClients = Client::where('user_id', $userId)
+            ->withCount('credits')
             ->withSum('credits', 'amount')
             ->having('credits_count', '>', 0)
             ->orderBy('credits_sum_amount', 'desc')
             ->limit(5)
             ->get();
 
-        // Crédits paginés avec recherche et filtrage
-        $query = Credit::with(['client', 'creator']);
+        // ===== المنتجات في حالة تنبيه =====
+        $alertProducts = Product::where('user_id', $userId)
+            ->where('quantite', '<=', DB::raw('seuil_alerte'))
+            ->orderBy('quantite')
+            ->limit(5)
+            ->get();
+
+        // ===== آخر الحركات =====
+        $recentMovements = Sortie::where('user_id', $userId)
+            ->with(['product', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        // ===== الكريديتات الأخيرة =====
+        $recentCredits = Credit::where('user_id', $userId)
+            ->with('client')
+            ->where('created_at', '>=', now()->subDays(7))
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        // ===== الكريديتات المقسمة =====
+        $query = Credit::where('user_id', $userId)->with(['client', 'creator']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -107,8 +126,8 @@ class DashboardController extends Controller
                     $clientQuery->where('name', 'LIKE', "%{$search}%")
                         ->orWhere('phone', 'LIKE', "%{$search}%");
                 })
-                    ->orWhere('reason', 'LIKE', "%{$search}%")
-                    ->orWhereDate('created_at', $search);
+                ->orWhere('reason', 'LIKE', "%{$search}%")
+                ->orWhereDate('created_at', $search);
             });
         }
 
@@ -119,7 +138,6 @@ class DashboardController extends Controller
         $paginatedCredits = $query->orderBy('created_at', 'desc')->paginate(15);
 
         return view('dashboard', compact(
-            // إحصائيات المخزون
             'totalProducts',
             'lowStockProducts',
             'outOfStockProducts',
@@ -127,8 +145,6 @@ class DashboardController extends Controller
             'totalQuantity',
             'alertProducts',
             'recentMovements',
-
-            // إحصائيات الائتمانات
             'totalCredits',
             'totalAmount',
             'activeCredits',
@@ -137,19 +153,19 @@ class DashboardController extends Controller
             'recentCredits',
             'monthlyData',
             'topClients',
-            'paginatedCredits'
+            'paginatedCredits',
+            'totalCategories',
+            'categoriesData'
         ));
     }
 
-    /**
-     * API pour الحصول على إحصائيات الائتمان (للاستخدام في الرسوم البيانية)
-     */
     public function getOverviewStats()
     {
-        $totalCredits = Credit::count();
-        $totalAmount = Credit::sum('amount');
-        $activeCredits = Credit::where('status', 'active')->count();
-        $totalRemaining = Credit::sum('remaining_amount');
+        $userId = Auth::id();
+        $totalCredits = Credit::where('user_id', $userId)->count();
+        $totalAmount = Credit::where('user_id', $userId)->sum('amount');
+        $activeCredits = Credit::where('user_id', $userId)->where('status', 'active')->count();
+        $totalRemaining = Credit::where('user_id', $userId)->sum('remaining_amount');
         $paidAmount = $totalAmount - $totalRemaining;
 
         return response()->json([
@@ -162,12 +178,11 @@ class DashboardController extends Controller
         ]);
     }
 
-    /**
-     * API للحصول على الإحصائيات الشهرية
-     */
     public function getMonthlyStats()
     {
-        $monthlyStats = Credit::selectRaw('
+        $userId = Auth::id();
+        $monthlyStats = Credit::where('user_id', $userId)
+            ->selectRaw('
                 YEAR(created_at) as year,
                 MONTH(created_at) as month,
                 COUNT(*) as credits_count,
@@ -182,18 +197,9 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($item) {
                 $monthNames = [
-                    1 => 'Janvier',
-                    2 => 'Février',
-                    3 => 'Mars',
-                    4 => 'Avril',
-                    5 => 'Mai',
-                    6 => 'Juin',
-                    7 => 'Juillet',
-                    8 => 'Août',
-                    9 => 'Septembre',
-                    10 => 'Octobre',
-                    11 => 'Novembre',
-                    12 => 'Décembre'
+                    1 => 'Janvier', 2 => 'Février', 3 => 'Mars', 4 => 'Avril',
+                    5 => 'Mai', 6 => 'Juin', 7 => 'Juillet', 8 => 'Août',
+                    9 => 'Septembre', 10 => 'Octobre', 11 => 'Novembre', 12 => 'Décembre'
                 ];
                 return [
                     'month' => $monthNames[$item->month] . ' ' . $item->year,
@@ -207,9 +213,6 @@ class DashboardController extends Controller
         return response()->json($monthlyStats);
     }
 
-    /**
-     * Ajouter un paiement à un crédit
-     */
     public function addPayment(Request $request, Credit $credit)
     {
         $request->validate([
@@ -220,7 +223,6 @@ class DashboardController extends Controller
         try {
             DB::beginTransaction();
 
-            // تحديث المدفوعات والكريدي
             $newPaidAmount = $credit->paid_amount + $request->payment_amount;
             $newRemainingAmount = $credit->amount - $newPaidAmount;
 
@@ -230,7 +232,6 @@ class DashboardController extends Controller
                 'status' => $newRemainingAmount <= 0 ? 'paid' : 'active'
             ]);
 
-            // حفظ سجل الدفع
             Payment::create([
                 'credit_id' => $credit->id,
                 'amount' => $request->payment_amount,
@@ -248,16 +249,17 @@ class DashboardController extends Controller
         }
     }
 
-    /**
-     * الحصول على إحصائيات سريعة للمخزون (للاستخدام في الـ widgets)
-     */
     public function getStockStats()
     {
-        $totalProducts = Product::count();
-        $lowStockProducts = Product::where('quantite', '<=', DB::raw('seuil_alerte'))
+        $userId = Auth::id();
+        $totalProducts = Product::where('user_id', $userId)->count();
+        $lowStockProducts = Product::where('user_id', $userId)
+            ->where('quantite', '<=', DB::raw('seuil_alerte'))
             ->where('quantite', '>', 0)
             ->count();
-        $outOfStockProducts = Product::where('quantite', 0)->count();
+        $outOfStockProducts = Product::where('user_id', $userId)
+            ->where('quantite', 0)
+            ->count();
         $goodStockProducts = $totalProducts - $lowStockProducts - $outOfStockProducts;
 
         return response()->json([
@@ -268,12 +270,11 @@ class DashboardController extends Controller
         ]);
     }
 
-    /**
-     * الحصول على آخر حركات المخزون
-     */
     public function getRecentStockMovements()
     {
-        $recentMovements = Sortie::with(['product', 'user'])
+        $userId = Auth::id();
+        $recentMovements = Sortie::where('user_id', $userId)
+            ->with(['product', 'user'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
@@ -291,12 +292,11 @@ class DashboardController extends Controller
         return response()->json($recentMovements);
     }
 
-    /**
-     * الحصول على المنتجات في حالة إنذار
-     */
     public function getAlertProducts()
     {
-        $alertProducts = Product::where('quantite', '<=', DB::raw('seuil_alerte'))
+        $userId = Auth::id();
+        $alertProducts = Product::where('user_id', $userId)
+            ->where('quantite', '<=', DB::raw('seuil_alerte'))
             ->orderBy('quantite')
             ->get()
             ->map(function ($product) {
@@ -307,7 +307,8 @@ class DashboardController extends Controller
                     'quantite' => $product->quantite,
                     'seuil_alerte' => $product->seuil_alerte,
                     'price' => $product->price,
-                    'status' => $product->quantite == 0 ? 'out_of_stock' : ($product->quantite <= $product->seuil_alerte ? 'low_stock' : 'good_stock')
+                    'status' => $product->quantite == 0 ? 'out_of_stock' : 
+                               ($product->quantite <= $product->seuil_alerte ? 'low_stock' : 'good_stock')
                 ];
             });
 
