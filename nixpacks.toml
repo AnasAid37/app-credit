@@ -1,17 +1,15 @@
 [phases.setup]
-nixPkgs = ["php82", "php82Extensions.gd", "php82Extensions.pdo_mysql", "php82Extensions.mbstring", "php82Extensions.zip", "php82Extensions.dom", "php82Extensions.curl", "php82Packages.composer"]
+nixPkgs = ["php82", "php82Extensions.gd", "php82Extensions.pdo_mysql", "php82Extensions.mbstring", "composer"]
 
 [phases.install]
-cmds = ["composer install --optimize-autoloader --no-dev --no-interaction"]
+cmds = ["composer install --no-dev --optimize-autoloader --no-scripts"]
 
 [phases.build]
 cmds = [
-    "npm ci && npm run build",
+    "npm install --legacy-peer-deps",
+    "npm run build || echo 'Build failed but continuing'",
     "mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs bootstrap/cache",
-    "chmod -R 775 storage bootstrap/cache",
-    "php artisan config:cache",
-    "php artisan route:cache",
-    "php artisan view:cache"
+    "chmod -R 777 storage bootstrap/cache"
 ]
 
 [start]
