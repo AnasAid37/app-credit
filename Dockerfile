@@ -56,5 +56,8 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD php artisan | grep -q "Laravel" || exit 1
 
 # Start command
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8080
-    
+CMD php artisan config:clear && \
+    php artisan cache:clear && \
+    php artisan migrate --force && \
+    php artisan storage:link && \
+    php artisan serve --host=0.0.0.0 --port=8080
