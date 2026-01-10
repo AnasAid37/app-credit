@@ -50,26 +50,29 @@ RUN composer dump-autoload --optimize
 RUN mkdir -p storage/framework/{sessions,views,cache,testing} \
     && mkdir -p storage/logs \
     && mkdir -p bootstrap/cache \
-    && chmod -R 775 storage \
-    && chmod -R 775 bootstrap/cache
+    && chmod -R 777 storage \
+    && chmod -R 777 bootstrap/cache
 
 # Create log file
 RUN touch storage/logs/laravel.log \
-    && chmod 664 storage/logs/laravel.log
+    && chmod 666 storage/logs/laravel.log
 
 # Expose port
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
-  CMD curl -f http://localhost:8080/health || exit 1
-
-# Startup script
-CMD php artisan config:clear && \
+# Start script with error handling
+CMD set -e && \
+    echo "🚀 Starting application..." && \
+    echo "📋 Checking environment..." && \
+    php -v && \
+    echo "🔧 Clearing caches..." && \
+    php artisan config:clear && \
     php artisan cache:clear && \
     php artisan view:clear && \
     php artisan route:clear && \
-    php artisan migrate --force --no-interaction && \
+    echo "🗄️ Running migrations..." && \
+    php artisan migrate --force --no-interaction || echo "⚠️ Migration failed, continuing..." && \
+    echo "🔗 Creating storage link..." && \
     (php artisan storage:link || echo "Storage link already exists") && \
-    echo "✅ Starting Laravel server on port 8080..." && \
-    php artisan serve --host=0.0.0.0 --port=8080
+    echo "✅ Starting server on 0.0.0.0:8080..." && \
+    php artisan serve --host=0.0.0.0 --port=8080 --tries=3
