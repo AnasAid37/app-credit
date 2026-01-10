@@ -12,7 +12,9 @@ use App\Http\Controllers\SubscribeController;
 use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
+Route::get('/', function () {
+    return 'Laravel is working on Railway! 🚀';
+})->name('login.form');
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
