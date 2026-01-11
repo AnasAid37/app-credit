@@ -180,7 +180,8 @@
                 <div class="login-card p-5">
                     <div class="text-center mb-4">
                         <img src="{{ asset('images/logo.png') }}" alt="Pneumatique Aqabli" class="company-logo">
-                        <h3 class="mb-3">Pneumatique Gestion Complète</h3>
+                        <h3 class="mb-3">Gestion Complète</h3>
+                        <h5 class="mb-3">Des chiffres clairs. Des décisions sûres.</h5>
                         <p class="text-muted">Connectez-vous à votre compte</p>
                     </div>
 
