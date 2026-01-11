@@ -11,6 +11,8 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\DateSql;
+
 
 class DashboardController extends Controller
 {
@@ -25,7 +27,7 @@ class DashboardController extends Controller
         // ===== إحصائيات المنتجات =====
         $totalProducts = Product::where('user_id', $userId)->count();
         $lowStockProducts = Product::where('user_id', $userId)
-            ->where('quantite', '<=', DB::raw('seuil_alerte'))
+            ->whereColumn('quantite', '<=', 'seuil_alerte')
             ->where('quantite', '>', 0)
             ->count();
         $outOfStockProducts = Product::where('user_id', $userId)
@@ -49,7 +51,7 @@ class DashboardController extends Controller
         $totalCategories = Category::where('user_id', $userId)
             ->where('actif', true)
             ->count();
-        
+
         $categoriesData = Category::where('user_id', $userId)
             ->where('actif', true)
             ->withCount('products')
@@ -57,18 +59,37 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // ===== البيانات الشهرية للكريديت =====
-        $monthlyData = Credit::where('user_id', $userId)
-            ->selectRaw('
-                MONTH(created_at) as month, 
-                COUNT(*) as count, 
-                SUM(amount) as total,
-                SUM(paid_amount) as paid,
-                SUM(remaining_amount) as remaining
-            ')
-            ->whereYear('created_at', date('Y'))
-            ->groupBy('month')
-            ->orderBy('month')
+        // ===== ✅ أكثر المنتجات مبيعاً هذا الشهر =====
+        $topProductsThisMonth = Sortie::where('user_id', $userId)
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->select('product_id', DB::raw('SUM(quantite) as total_sold'))
+            ->groupBy('product_id')
+            ->orderByDesc('total_sold')
+            ->with('product')
+            ->limit(5)
+            ->get();
+
+        // ===== ✅ إجمالي المبيعات هذا الشهر =====
+        $totalSalesThisMonth = Sortie::where('user_id', $userId)
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->sum('quantite');
+
+        // ✅ البيانات الشهرية للكريديت - متوافق مع PostgreSQL
+        $query = Credit::where('user_id', $userId);
+        DateSql::whereYear($query, 'created_at', date('Y'));
+
+        $monthlyData = $query
+            ->select(
+                DateSql::month('created_at','month'),
+                DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(amount) as total'),
+                DB::raw('SUM(paid_amount) as paid'),
+                DB::raw('SUM(remaining_amount) as remaining')
+            )
+            ->groupBy(DateSql::month('created_at'))
+            ->orderBy(DateSql::month('created_at'))
             ->get()
             ->map(function ($item) {
                 $monthNames = [
@@ -85,18 +106,18 @@ class DashboardController extends Controller
                 ];
             });
 
-        // ===== أفضل العملاء =====
+        // ===== أفضل العملاء - ✅ محدث للتوافق مع PostgreSQL =====
         $topClients = Client::where('user_id', $userId)
             ->withCount('credits')
             ->withSum('credits', 'amount')
-            ->having('credits_count', '>', 0)
+            ->whereHas('credits')
             ->orderBy('credits_sum_amount', 'desc')
             ->limit(5)
             ->get();
 
         // ===== المنتجات في حالة تنبيه =====
         $alertProducts = Product::where('user_id', $userId)
-            ->where('quantite', '<=', DB::raw('seuil_alerte'))
+            ->whereColumn('quantite', '<=', 'seuil_alerte')
             ->orderBy('quantite')
             ->limit(5)
             ->get();
@@ -116,6 +137,27 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // ===== أفضل العملاء هذا الشهر =====
+        $topClientsThisMonth = Client::where('user_id', $userId)
+            ->withCount(['credits' => function ($query) {
+                $query->whereYear('created_at', now()->year)
+                    ->whereMonth('created_at', now()->month);
+            }])
+            ->withSum(['credits' => function ($query) {
+                $query->whereYear('created_at', now()->year)
+                    ->whereMonth('created_at', now()->month);
+            }], 'amount')
+            ->orderBy('credits_sum_amount', 'desc')
+            ->limit(5)
+            ->get();
+
+        // Total number of clients who had credits this month
+        $totalClientsThisMonth = Client::where('user_id', $userId)
+            ->whereHas('credits', function ($q) {
+                $q->whereYear('created_at', now()->year)
+                  ->whereMonth('created_at', now()->month);
+            })->count();
+
         // ===== الكريديتات المقسمة =====
         $query = Credit::where('user_id', $userId)->with(['client', 'creator']);
 
@@ -126,8 +168,8 @@ class DashboardController extends Controller
                     $clientQuery->where('name', 'LIKE', "%{$search}%")
                         ->orWhere('phone', 'LIKE', "%{$search}%");
                 })
-                ->orWhere('reason', 'LIKE', "%{$search}%")
-                ->orWhereDate('created_at', $search);
+                    ->orWhere('reason', 'LIKE', "%{$search}%")
+                    ->orWhereDate('created_at', $search);
             });
         }
 
@@ -153,9 +195,13 @@ class DashboardController extends Controller
             'recentCredits',
             'monthlyData',
             'topClients',
+            'topClientsThisMonth',
+            'totalClientsThisMonth',
             'paginatedCredits',
             'totalCategories',
-            'categoriesData'
+            'categoriesData',
+            'topProductsThisMonth',
+            'totalSalesThisMonth'
         ));
     }
 
@@ -181,19 +227,22 @@ class DashboardController extends Controller
     public function getMonthlyStats()
     {
         $userId = Auth::id();
-        $monthlyStats = Credit::where('user_id', $userId)
-            ->selectRaw('
-                YEAR(created_at) as year,
-                MONTH(created_at) as month,
-                COUNT(*) as credits_count,
-                SUM(amount) as total_amount,
-                SUM(paid_amount) as total_paid,
-                SUM(remaining_amount) as total_remaining
-            ')
-            ->whereYear('created_at', date('Y'))
-            ->groupBy('year', 'month')
-            ->orderBy('year', 'desc')
-            ->orderBy('month', 'desc')
+
+        $query = Credit::where('user_id', $userId);
+        DateSql::whereYear($query, 'created_at', date('Y'));
+
+        $monthlyStats = $query
+            ->select(
+                DateSql::year('created_at','year'),
+                DateSql::month('created_at','month'),
+                DB::raw('COUNT(*) as credits_count'),
+                DB::raw('SUM(amount) as total_amount'),
+                DB::raw('SUM(paid_amount) as total_paid'),
+                DB::raw('SUM(remaining_amount) as total_remaining')
+            )
+            ->groupBy(DateSql::year('created_at'), DateSql::month('created_at'))
+            ->orderByDesc(DateSql::year('created_at'))
+            ->orderByDesc(DateSql::month('created_at'))
             ->get()
             ->map(function ($item) {
                 $monthNames = [
@@ -307,8 +356,7 @@ class DashboardController extends Controller
                     'quantite' => $product->quantite,
                     'seuil_alerte' => $product->seuil_alerte,
                     'price' => $product->price,
-                    'status' => $product->quantite == 0 ? 'out_of_stock' : 
-                               ($product->quantite <= $product->seuil_alerte ? 'low_stock' : 'good_stock')
+                    'status' => $product->quantite == 0 ? 'out_of_stock' : ($product->quantite <= $product->seuil_alerte ? 'low_stock' : 'good_stock')
                 ];
             });
 

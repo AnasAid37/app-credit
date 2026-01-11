@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\Sortie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\DateSql;
 
 
 class CreditController extends Controller
@@ -18,7 +19,6 @@ class CreditController extends Controller
      */
     public function index(Request $request)
     {
-        // ✅ فلترة حسب المستخدم الحالي
         $query = Credit::with(['client', 'creator'])
             ->where('user_id', auth()->id());
 
@@ -126,12 +126,10 @@ class CreditController extends Controller
      */
     public function show(Credit $credit)
     {
-        // التحقق من الملكية
         if ($credit->user_id !== auth()->id()) {
             abort(403);
         }
 
-        // ✅ إحصائيات الكريديت
         $creditStats = [
             'total_credits' => Credit::where('user_id', auth()->id())->count(),
             'paid_credits' => Credit::where('user_id', auth()->id())
@@ -144,22 +142,29 @@ class CreditController extends Controller
                 ->sum('remaining_amount'),
         ];
 
-        // ✅ Top 5 منتجات مرتبطة بهذا الكريديت
         $topProducts = Sortie::where('user_id', auth()->id())
             ->where('credit_id', $credit->id)
             ->with('product')
-            ->select('product_id', DB::raw('SUM(quantite) as total_quantity'), DB::raw('SUM(total_price) as total_value'))
+            ->select(
+                'product_id',
+                DB::raw('SUM(quantite) as total_quantity'),
+                DB::raw('SUM(total_price) as total_value')
+            )
             ->groupBy('product_id')
             ->orderBy('total_quantity', 'desc')
             ->limit(5)
             ->get();
 
-        // ✅ إحصائيات شهرية لهذا الكريديت
+        // ✅ إحصائيات شهرية مُصلحة
         $monthlyStats = Payment::where('credit_id', $credit->id)
-            ->selectRaw('MONTH(created_at) as month, YEAR(created_at) as year, SUM(amount) as total')
-            ->groupBy('year', 'month')
-            ->orderBy('year', 'desc')
-            ->orderBy('month', 'desc')
+            ->select(
+                DateSql::month('created_at', 'month'),
+                DateSql::year('created_at', 'year'),
+                DB::raw('SUM(amount) as total')
+            )
+            ->groupBy(DateSql::yearGroupBy('created_at'), DateSql::monthGroupBy('created_at'))
+            ->orderByDesc(DB::raw('year'))
+            ->orderByDesc(DB::raw('month'))
             ->limit(6)
             ->get()
             ->map(function ($item) {
@@ -169,7 +174,6 @@ class CreditController extends Controller
                 ];
             });
 
-        // ✅ كريديات أخرى للعميل
         $otherCredits = Credit::where('client_id', $credit->client_id)
             ->where('id', '!=', $credit->id)
             ->where('user_id', auth()->id())

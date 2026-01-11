@@ -6,12 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Créer un compte - Pneumatique Gestion Complète</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+
     <style>
         body {
             margin: 0;
@@ -67,6 +67,7 @@
                 opacity: 0;
                 transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -86,7 +87,8 @@
             font-size: 2rem;
         }
 
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             border-radius: 12px;
             padding: 0.75rem 1rem;
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -100,7 +102,8 @@
             color: rgba(255, 255, 255, 0.7);
         }
 
-        .form-control:focus, .form-select:focus {
+        .form-control:focus,
+        .form-select:focus {
             border-color: rgba(255, 255, 255, 0.6);
             background: rgba(255, 255, 255, 0.25);
             box-shadow: 0 0 0 0.3rem rgba(255, 255, 255, 0.1);
@@ -166,6 +169,7 @@
                 opacity: 0;
                 transform: translateX(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0);
@@ -202,10 +206,25 @@
             transition: all 0.3s ease;
         }
 
-        .password-weak { background: #e74a3b; width: 25%; }
-        .password-medium { background: #f6c23e; width: 50%; }
-        .password-strong { background: #1cc88a; width: 75%; }
-        .password-very-strong { background: #1cc88a; width: 100%; }
+        .password-weak {
+            background: #e74a3b;
+            width: 25%;
+        }
+
+        .password-medium {
+            background: #f6c23e;
+            width: 50%;
+        }
+
+        .password-strong {
+            background: #1cc88a;
+            width: 75%;
+        }
+
+        .password-very-strong {
+            background: #1cc88a;
+            width: 100%;
+        }
 
         .input-group-text {
             background: rgba(255, 255, 255, 0.15);
@@ -224,9 +243,11 @@
             .video-background {
                 display: none;
             }
+
             body {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             }
+
             .register-card {
                 margin: 1rem;
                 padding: 1.5rem !important;
@@ -257,26 +278,26 @@
                     </div>
 
                     <!-- Messages d'erreur -->
-                    @if($errors->any())
-                    <div class="alert alert-danger">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-exclamation-triangle fa-lg me-2"></i>
-                            <h6 class="mb-0">Veuillez corriger les erreurs suivantes:</h6>
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-exclamation-triangle fa-lg me-2"></i>
+                                <h6 class="mb-0">Veuillez corriger les erreurs suivantes:</h6>
+                            </div>
+                            <ul class="mb-0 ps-4">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
                         </div>
-                        <ul class="mb-0 ps-4">
-                            @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
                     @endif
 
                     <!-- Message de succès -->
-                    @if(session('success'))
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle me-2"></i>
-                        {{ session('success') }}
-                    </div>
+                    @if (session('success'))
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            {{ session('success') }}
+                        </div>
                     @endif
 
                     <!-- Formulaire -->
@@ -293,14 +314,9 @@
                                     <span class="input-group-text">
                                         <i class="fas fa-user"></i>
                                     </span>
-                                    <input type="text" 
-                                           class="form-control @error('nom') is-invalid @enderror" 
-                                           id="nom" 
-                                           name="nom" 
-                                           value="{{ old('nom') }}" 
-                                           placeholder="Votre nom complet"
-                                           required 
-                                           autofocus>
+                                    <input type="text" class="form-control @error('nom') is-invalid @enderror"
+                                        id="nom" name="nom" value="{{ old('nom') }}"
+                                        placeholder="Votre nom complet" required autofocus>
                                 </div>
                             </div>
 
@@ -313,13 +329,9 @@
                                     <span class="input-group-text">
                                         <i class="fas fa-envelope"></i>
                                     </span>
-                                    <input type="email" 
-                                           class="form-control @error('email') is-invalid @enderror" 
-                                           id="email" 
-                                           name="email" 
-                                           value="{{ old('email') }}" 
-                                           placeholder="votre@email.com"
-                                           required>
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                        id="email" name="email" value="{{ old('email') }}"
+                                        placeholder="votre@email.com" required>
                                 </div>
                             </div>
                         </div>
@@ -332,12 +344,9 @@
                                     <span class="input-group-text">
                                         <i class="fas fa-phone"></i>
                                     </span>
-                                    <input type="tel" 
-                                           class="form-control @error('telephone') is-invalid @enderror" 
-                                           id="telephone" 
-                                           name="telephone" 
-                                           value="{{ old('telephone') }}"
-                                           placeholder="06 XX XX XX XX">
+                                    <input type="tel" class="form-control @error('telephone') is-invalid @enderror"
+                                        id="telephone" name="telephone" value="{{ old('telephone') }}"
+                                        placeholder="06 XX XX XX XX">
                                 </div>
                                 <div class="form-text">
                                     <i class="fas fa-info-circle me-1"></i>Optionnel
@@ -355,12 +364,16 @@
                                     <span class="input-group-text">
                                         <i class="fas fa-lock"></i>
                                     </span>
-                                    <input type="password" 
-                                           class="form-control @error('password') is-invalid @enderror" 
-                                           id="password" 
-                                           name="password" 
-                                           placeholder="••••••••"
-                                           required>
+                                    <input type="password" class="form-control @error('password') is-invalid @enderror"
+                                        id="password" name="password" placeholder="••••••••" required>
+                                    <i id="eyeIcon" class="fa fa-eye" onclick="togglePassword()"
+                                        style="
+            position: absolute;
+            top: 65%;
+            right: 12px;
+            transform: translateY(-50%);
+            cursor: pointer;
+        "></i>
                                 </div>
                                 <div class="password-strength mt-2">
                                     <div class="password-strength-bar"></div>
@@ -380,12 +393,8 @@
                                     <span class="input-group-text">
                                         <i class="fas fa-lock"></i>
                                     </span>
-                                    <input type="password" 
-                                           class="form-control" 
-                                           id="password_confirmation" 
-                                           name="password_confirmation" 
-                                           placeholder="••••••••"
-                                           required>
+                                    <input type="password" class="form-control" id="password_confirmation"
+                                        name="password_confirmation" placeholder="••••••••" required>
                                 </div>
                                 <div class="form-text" id="password-match">
                                     <i class="fas fa-info-circle me-1"></i>
@@ -404,7 +413,7 @@
                         <!-- Lien de connexion -->
                         <div class="text-center">
                             <p class="mb-0">
-                                Déjà un compte? 
+                                Déjà un compte?
                                 <a href="{{ route('login') }}" class="login-link">
                                     <i class="fas fa-sign-in-alt me-1"></i>Se connecter
                                 </a>
@@ -426,82 +435,100 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const password = document.getElementById('password');
-        const confirmPassword = document.getElementById('password_confirmation');
-        const passwordMatch = document.getElementById('password-match');
-        const strengthBar = document.querySelector('.password-strength-bar');
+        document.addEventListener('DOMContentLoaded', function() {
+            const password = document.getElementById('password');
+            const confirmPassword = document.getElementById('password_confirmation');
+            const passwordMatch = document.getElementById('password-match');
+            const strengthBar = document.querySelector('.password-strength-bar');
 
-        // Vérification du mot de passe
-        function validatePassword() {
-            if (confirmPassword.value === '') {
-                passwordMatch.innerHTML = '<i class="fas fa-info-circle me-1"></i>Confirmez votre mot de passe';
-                passwordMatch.className = 'form-text';
-                confirmPassword.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-            } else if (password.value === confirmPassword.value) {
-                passwordMatch.innerHTML = '<i class="fas fa-check-circle me-1"></i>Les mots de passe correspondent';
-                passwordMatch.style.color = '#1cc88a';
-                confirmPassword.style.borderColor = 'rgba(28, 200, 138, 0.6)';
-                confirmPassword.setCustomValidity('');
+
+            // Vérification du mot de passe
+            function validatePassword() {
+                if (confirmPassword.value === '') {
+                    passwordMatch.innerHTML = '<i class="fas fa-info-circle me-1"></i>Confirmez votre mot de passe';
+                    passwordMatch.className = 'form-text';
+                    confirmPassword.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                } else if (password.value === confirmPassword.value) {
+                    passwordMatch.innerHTML =
+                        '<i class="fas fa-check-circle me-1"></i>Les mots de passe correspondent';
+                    passwordMatch.style.color = '#1cc88a';
+                    confirmPassword.style.borderColor = 'rgba(28, 200, 138, 0.6)';
+                    confirmPassword.setCustomValidity('');
+                } else {
+                    passwordMatch.innerHTML =
+                        '<i class="fas fa-times-circle me-1"></i>Les mots de passe ne correspondent pas';
+                    passwordMatch.style.color = '#e74a3b';
+                    confirmPassword.style.borderColor = 'rgba(231, 74, 59, 0.6)';
+                    confirmPassword.setCustomValidity('Les mots de passe ne correspondent pas');
+                }
+            }
+
+            // Force du mot de passe
+            password.addEventListener('input', function(e) {
+                const pwd = e.target.value;
+                let strength = 0;
+
+                if (pwd.length >= 8) strength++;
+                if (pwd.match(/[a-z]/)) strength++;
+                if (pwd.match(/[A-Z]/)) strength++;
+                if (pwd.match(/[0-9]/)) strength++;
+                if (pwd.match(/[^a-zA-Z0-9]/)) strength++;
+
+                strengthBar.className = 'password-strength-bar ';
+                if (strength <= 2) {
+                    strengthBar.classList.add('password-weak');
+                } else if (strength <= 3) {
+                    strengthBar.classList.add('password-medium');
+                } else if (strength <= 4) {
+                    strengthBar.classList.add('password-strong');
+                } else {
+                    strengthBar.classList.add('password-very-strong');
+                }
+
+                validatePassword();
+            });
+
+            confirmPassword.addEventListener('input', validatePassword);
+
+            // Format téléphone
+            const telephone = document.getElementById('telephone');
+            telephone.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9+\s-]/g, '');
+            });
+
+            // Contrôle vidéo pour mobile
+            const video = document.querySelector('.video-background');
+            if (window.innerWidth <= 768 && video) {
+                video.style.display = 'none';
+            }
+
+            // Validation du formulaire
+            const form = document.getElementById('registerForm');
+            form.addEventListener('submit', function(e) {
+                if (password.value !== confirmPassword.value) {
+                    e.preventDefault();
+                    confirmPassword.focus();
+                    return false;
+                }
+            });
+        });
+
+        function togglePassword() {
+            const input = document.getElementById("password");
+            const icon = document.getElementById("eyeIcon");
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
             } else {
-                passwordMatch.innerHTML = '<i class="fas fa-times-circle me-1"></i>Les mots de passe ne correspondent pas';
-                passwordMatch.style.color = '#e74a3b';
-                confirmPassword.style.borderColor = 'rgba(231, 74, 59, 0.6)';
-                confirmPassword.setCustomValidity('Les mots de passe ne correspondent pas');
+                input.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
             }
         }
-
-        // Force du mot de passe
-        password.addEventListener('input', function(e) {
-            const pwd = e.target.value;
-            let strength = 0;
-            
-            if (pwd.length >= 8) strength++;
-            if (pwd.match(/[a-z]/)) strength++;
-            if (pwd.match(/[A-Z]/)) strength++;
-            if (pwd.match(/[0-9]/)) strength++;
-            if (pwd.match(/[^a-zA-Z0-9]/)) strength++;
-            
-            strengthBar.className = 'password-strength-bar ';
-            if (strength <= 2) {
-                strengthBar.classList.add('password-weak');
-            } else if (strength <= 3) {
-                strengthBar.classList.add('password-medium');
-            } else if (strength <= 4) {
-                strengthBar.classList.add('password-strong');
-            } else {
-                strengthBar.classList.add('password-very-strong');
-            }
-            
-            validatePassword();
-        });
-
-        confirmPassword.addEventListener('input', validatePassword);
-
-        // Format téléphone
-        const telephone = document.getElementById('telephone');
-        telephone.addEventListener('input', function() {
-            this.value = this.value.replace(/[^0-9+\s-]/g, '');
-        });
-
-        // Contrôle vidéo pour mobile
-        const video = document.querySelector('.video-background');
-        if (window.innerWidth <= 768 && video) {
-            video.style.display = 'none';
-        }
-
-        // Validation du formulaire
-        const form = document.getElementById('registerForm');
-        form.addEventListener('submit', function(e) {
-            if (password.value !== confirmPassword.value) {
-                e.preventDefault();
-                confirmPassword.focus();
-                return false;
-            }
-        });
-    });
     </script>
 </body>
 

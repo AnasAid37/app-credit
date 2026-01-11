@@ -22,9 +22,7 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        /* ================================
-       DASHBOARD HEADER
-       ================================ */
+        /* DASHBOARD HEADER */
         .dashboard-header {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
@@ -65,37 +63,7 @@
             opacity: 0.9;
         }
 
-        .greeting-text i {
-            font-size: 1.25rem;
-        }
-
-        .user-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 20px;
-            border-radius: 50px;
-            backdrop-filter: blur(10px);
-            margin-top: 10px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: white;
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        /* ================================
-       STAT CARDS
-       ================================ */
+        /* STAT CARDS */
         .stat-card {
             background: white;
             border-radius: 1rem;
@@ -115,7 +83,6 @@
             left: 0;
             width: 4px;
             height: 100%;
-            background: var(--primary-color);
             transition: width 0.3s ease;
         }
 
@@ -128,12 +95,33 @@
             width: 8px;
         }
 
-        .stat-card.primary::before { background: var(--primary-color); }
-        .stat-card.success::before { background: var(--success-color); }
-        .stat-card.warning::before { background: var(--warning-color); }
-        .stat-card.danger::before { background: var(--danger-color); }
-        .stat-card.info::before { background: var(--info-color); }
-        .stat-card.purple::before { background: var(--secondary-color); }
+        .stat-card.primary::before {
+            background: var(--primary-color);
+        }
+
+        .stat-card.success::before {
+            background: var(--success-color);
+        }
+
+        .stat-card.warning::before {
+            background: var(--warning-color);
+        }
+
+        .stat-card.danger::before {
+            background: var(--danger-color);
+        }
+
+        .stat-card.info::before {
+            background: var(--info-color);
+        }
+
+        .stat-card.purple::before {
+            background: var(--secondary-color);
+        }
+
+        .stat-card.orange::before {
+            background: #f97316;
+        }
 
         .stat-icon {
             width: 60px;
@@ -146,12 +134,40 @@
             margin-bottom: 1rem;
         }
 
-        .stat-icon.primary { background: rgba(99, 102, 241, 0.1); color: var(--primary-color); }
-        .stat-icon.success { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
-        .stat-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
-        .stat-icon.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
-        .stat-icon.info { background: rgba(59, 130, 246, 0.1); color: var(--info-color); }
-        .stat-icon.purple { background: rgba(139, 92, 246, 0.1); color: var(--secondary-color); }
+        .stat-icon.primary {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary-color);
+        }
+
+        .stat-icon.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .stat-icon.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .stat-icon.danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        .stat-icon.info {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info-color);
+        }
+
+        .stat-icon.purple {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--secondary-color);
+        }
+
+        .stat-icon.orange {
+            background: rgba(249, 115, 22, 0.1);
+            color: #f97316;
+        }
 
         .stat-value {
             font-size: 2rem;
@@ -183,9 +199,7 @@
             transition: width 1s ease;
         }
 
-        /* ================================
-       MODERN CARD
-       ================================ */
+        /* MODERN CARD */
         .modern-card {
             background: white;
             border-radius: 1rem;
@@ -220,13 +234,7 @@
             gap: 0.5rem;
         }
 
-        .modern-card-title i {
-            font-size: 1.125rem;
-        }
-
-        /* ================================
-       CHART GRID - تحسين تخطيط الرسوم البيانية
-       ================================ */
+        /* CHART GRID */
         .chart-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -237,12 +245,6 @@
         @media (max-width: 1200px) {
             .chart-grid {
                 grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .chart-grid {
-                gap: 1rem;
             }
         }
 
@@ -280,11 +282,6 @@
             gap: 10px;
         }
 
-        .chart-title i {
-            font-size: 1.25rem;
-            color: var(--primary-color);
-        }
-
         .chart-container {
             position: relative;
             height: 280px;
@@ -305,9 +302,7 @@
             color: var(--primary-color);
         }
 
-        /* ================================
-       BUTTONS
-       ================================ */
+        /* BUTTONS */
         .btn-modern {
             padding: 0.625rem 1.25rem;
             border-radius: 0.5rem;
@@ -345,9 +340,8 @@
             color: white;
         }
 
-        /* ================================
-       TOP CLIENTS & ACTIVITY
-       ================================ */
+        /* TOP PRODUCTS & CLIENTS */
+        .top-product-item,
         .top-client-item {
             background: white;
             border-radius: 0.75rem;
@@ -355,6 +349,15 @@
             margin-bottom: 0.75rem;
             border: 2px solid #f1f5f9;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .top-product-item:hover {
+            border-color: #f97316;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
         }
 
         .top-client-item:hover {
@@ -363,37 +366,56 @@
             box-shadow: var(--card-shadow);
         }
 
+        .product-rank,
         .rank-badge {
-            width: 35px;
-            height: 35px;
+            width: 40px;
+            height: 40px;
             border-radius: 0.5rem;
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 0.875rem;
             flex-shrink: 0;
         }
 
+        .product-rank {
+            background: linear-gradient(135deg, #f97316, #fb923c);
+        }
+
+        .rank-badge {
+            width: 35px;
+            height: 35px;
+            font-size: 0.875rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .product-icon,
         .client-avatar {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 0.75rem;
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 1rem;
             flex-shrink: 0;
         }
 
-        /* ================================
-       ACTIVITY ITEMS
-       ================================ */
+        .product-icon {
+            background: linear-gradient(135deg, #f97316, #fb923c);
+            font-size: 1.3rem;
+        }
+
+        .client-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            font-size: 1rem;
+        }
+
+        /* ACTIVITY ITEMS */
         .activity-item {
             display: flex;
             align-items: center;
@@ -439,9 +461,7 @@
             background: linear-gradient(135deg, var(--info-color), #60a5fa);
         }
 
-        /* ================================
-       TABLES
-       ================================ */
+        /* TABLES */
         .table-modern {
             border-collapse: separate;
             border-spacing: 0;
@@ -476,9 +496,7 @@
             border-bottom: 1px solid #f1f5f9;
         }
 
-        /* ================================
-       BADGES
-       ================================ */
+        /* BADGES */
         .badge-modern {
             padding: 0.375rem 0.75rem;
             border-radius: 0.5rem;
@@ -514,14 +532,50 @@
             color: white;
         }
 
-        .badge-secondary-gradient {
-            background: linear-gradient(135deg, #64748b, #94a3b8);
+        .badge-orange-gradient {
+            background: linear-gradient(135deg, #f97316, #fb923c);
             color: white;
         }
 
-        /* ================================
-       RESPONSIVE
-       ================================ */
+        /* ANIMATIONS */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card,
+        .chart-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .stat-card:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .stat-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .stat-card:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .stat-card:nth-child(4) {
+            animation-delay: 0.2s;
+        }
+
+        .stat-card:nth-child(5) {
+            animation-delay: 0.25s;
+        }
+
+        /* RESPONSIVE */
         @media (max-width: 768px) {
             .dashboard-header {
                 padding: 1.5rem;
@@ -535,105 +589,16 @@
                 font-size: 1.5rem;
             }
 
-            .stat-icon {
-                width: 50px;
-                height: 50px;
-                font-size: 1.25rem;
-            }
-
-            .modern-card-title {
-                font-size: 1.125rem;
-            }
-
             .chart-container {
                 height: 250px;
             }
-
-            .chart-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .table-modern {
-                font-size: 0.875rem;
-            }
-
-            .table-modern thead th,
-            .table-modern tbody td {
-                padding: 0.75rem 0.5rem;
-            }
         }
 
-        @media (max-width: 576px) {
-            .dashboard-header h1 {
-                font-size: 1.25rem;
-            }
-
-            .stat-value {
-                font-size: 1.25rem;
-            }
-
-            .btn-modern {
-                padding: 0.5rem 1rem;
-                font-size: 0.875rem;
-            }
-
-            .modern-card {
-                padding: 1rem;
-            }
-
-            .chart-container {
-                height: 220px;
-            }
+        .text-orange {
+            color: #f97316;
         }
 
-        /* ================================
-       ANIMATIONS
-       ================================ */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .stat-card, .chart-card {
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        .stat-card:nth-child(1) { animation-delay: 0.05s; }
-        .stat-card:nth-child(2) { animation-delay: 0.1s; }
-        .stat-card:nth-child(3) { animation-delay: 0.15s; }
-        .stat-card:nth-child(4) { animation-delay: 0.2s; }
-
-        /* ================================
-       SCROLLBAR
-       ================================ */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
-        }
-
-        /* ================================
-       UTILITIES
-       ================================ */
+        /* UTILITIES */
         .container-fluid.px-4 {
             padding-left: 1.5rem !important;
             padding-right: 1.5rem !important;
@@ -645,17 +610,12 @@
             --bs-gutter-x: 1.5rem;
             --bs-gutter-y: 1.5rem;
         }
-
-        .text-center.py-4 i.fa-3x,
-        .text-center.py-5 i.fa-3x {
-            opacity: 0.3;
-        }
     </style>
 @endpush
 
 @section('content')
     <div class="container-fluid px-4">
-        <!-- En-tête du tableau de bord avec salutation -->
+        <!-- Dashboard Header -->
         <div class="dashboard-header">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
@@ -663,21 +623,11 @@
                         <i class="fas fa-sun"></i>
                         @php
                             $hour = now()->hour;
-                            if ($hour < 12) {
-                                $greeting = 'Bonjour';
-                            } elseif ($hour < 18) {
-                                $greeting = 'Bon après-midi';
-                            } else {
-                                $greeting = 'Bonsoir';
-                            }
+                            $greeting = $hour < 12 ? 'Bonjour' : ($hour < 18 ? 'Bon après-midi' : 'Bonsoir');
                         @endphp
-                        <strong>{{ $greeting }},</strong>
-                        <strong>{{ Auth::user()->name }}</strong>
+                        <strong>{{ $greeting }}, {{ Auth::user()->name }}</strong>
                     </div>
-                    <h1>
-                        Tableau de Bord
-                        
-                    </h1>
+                    <h1>Tableau de Bord</h1>
                     <p class="mb-0 opacity-90">
                         <i class="fas fa-calendar-alt me-2"></i>
                         {{ now()->translatedFormat('l d F Y') }}
@@ -698,123 +648,131 @@
             </div>
         </div>
 
-        <!-- Statistiques Stock -->
-        <div class="row g-4 mb-4">
-            <div class="col-xl-3 col-md-6">
-                <div class="stat-card">
+        <!-- Statistiques Stock (5 cartes) -->
+        <div class="row g-4 mb-4 ">
+            <div class="col-xl col-md-6">
+                <div class="stat-card primary">
                     <div class="stat-icon primary">
                         <i class="fas fa-boxes"></i>
                     </div>
                     <div class="stat-value">{{ $totalProducts }}</div>
                     <div class="stat-label">Total Produits</div>
                     <div class="stat-progress">
-                        <div class="stat-progress-bar" style="width: 85%"></div>
+                        <div class="stat-progress-bar" style="width: 85%; background: var(--primary-color);"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-xl-3 col-md-6">
-                <div class="stat-card">
+            <div class="col-xl col-md-6">
+                <div class="stat-card success">
                     <div class="stat-icon success">
                         <i class="fas fa-check-circle"></i>
                     </div>
                     <div class="stat-value">{{ $goodStockProducts }}</div>
-                    <div class="stat-label">Stock Satisfaisant</div>
+                    <div class="stat-label">Stock Bon</div>
                     <div class="stat-progress">
-                        <div class="stat-progress-bar"
-                            style="width: 70%; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+                        <div class="stat-progress-bar" style="width: 70%; background: var(--success-color);"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-xl-3 col-md-6">
-                <div class="stat-card">
+            <div class="col-xl col-md-6">
+                <div class="stat-card warning">
                     <div class="stat-icon warning">
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
                     <div class="stat-value">{{ $lowStockProducts }}</div>
                     <div class="stat-label">Stock Faible</div>
                     <div class="stat-progress">
-                        <div class="stat-progress-bar"
-                            style="width: 30%; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
+                        <div class="stat-progress-bar" style="width: 30%; background: var(--warning-color);"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-xl-3 col-md-6">
-                <div class="stat-card">
+            <div class="col-xl col-md-6">
+                <div class="stat-card danger">
                     <div class="stat-icon danger">
                         <i class="fas fa-times-circle"></i>
                     </div>
                     <div class="stat-value">{{ $outOfStockProducts }}</div>
-                    <div class="stat-label">Stock Épuisé</div>
+                    <div class="stat-label">Épuisé</div>
                     <div class="stat-progress">
-                        <div class="stat-progress-bar"
-                            style="width: 15%; background: linear-gradient(90deg, #ef4444, #f87171);"></div>
+                        <div class="stat-progress-bar" style="width: 15%; background: var(--danger-color);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl col-md-6">
+                <div class="stat-card orange">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="stat-value">{{ $totalCategories }}</div>
+                    <div class="stat-label">Catégories</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" style="width: 60%; background: #f97316;"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Statistiques Crédit -->
+        <!-- Statistiques Crédit (4 cartes) -->
         <div class="row g-4 mb-4">
             <div class="col-xl-3 col-md-6">
-                <div class="stat-card">
+                <div class="stat-card purple">
                     <div class="stat-icon purple">
                         <i class="fas fa-file-invoice-dollar"></i>
                     </div>
                     <div class="stat-value">{{ $totalCredits }}</div>
                     <div class="stat-label">Total Crédits</div>
                     <div class="stat-progress">
-                        <div class="stat-progress-bar" style="width: 75%"></div>
+                        <div class="stat-progress-bar" style="width: 75%; background: var(--secondary-color);"></div>
                     </div>
                 </div>
             </div>
 
             <div class="col-xl-3 col-md-6">
-                <div class="stat-card">
+                <div class="stat-card success">
                     <div class="stat-icon success">
                         <i class="fas fa-money-bill-wave"></i>
                     </div>
                     <div class="stat-value">{{ number_format($totalAmount / 1000, 1) }}K</div>
                     <div class="stat-label">Montant Total (DH)</div>
                     <div class="stat-progress">
-                        <div class="stat-progress-bar" style="width: 65%"></div>
+                        <div class="stat-progress-bar" style="width: 65%; background: var(--success-color);"></div>
                     </div>
                 </div>
             </div>
 
             <div class="col-xl-3 col-md-6">
-                <div class="stat-card">
+                <div class="stat-card info">
                     <div class="stat-icon info">
                         <i class="fas fa-clock"></i>
                     </div>
                     <div class="stat-value">{{ $activeCredits }}</div>
                     <div class="stat-label">Crédits Actifs</div>
                     <div class="stat-progress">
-                        <div class="stat-progress-bar"
-                            style="width: 55%; background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
+                        <div class="stat-progress-bar" style="width: 55%; background: var(--info-color);"></div>
                     </div>
                 </div>
             </div>
 
             <div class="col-xl-3 col-md-6">
-                <div class="stat-card">
+                <div class="stat-card warning">
                     <div class="stat-icon warning">
                         <i class="fas fa-exclamation-circle"></i>
                     </div>
                     <div class="stat-value">{{ number_format($totalRemaining / 1000, 1) }}K</div>
-                    <div class="stat-label">Montant Restant (DH)</div>
+                    <div class="stat-label">Restant (DH)</div>
                     <div class="stat-progress">
-                        <div class="stat-progress-bar" style="width: 40%"></div>
+                        <div class="stat-progress-bar" style="width: 40%; background: var(--warning-color);"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- **الجزء المحسّن: تخطيط Grid للرسوم البيانية بشكل متوازي ** -->
+        <!-- Charts Grid -->
         <div class="chart-grid mb-4">
-            <!-- Graph 1: Évolution des Crédits -->
             <div class="chart-card">
                 <div class="chart-header">
                     <h5 class="chart-title">
@@ -822,7 +780,7 @@
                         Évolution des Crédits
                     </h5>
                     <span class="chart-badge">
-                        <i class="fas fa-arrow-up"></i> 15%
+                        <i class="fas fa-arrow-up"></i> Annuel
                     </span>
                 </div>
                 <div class="chart-container">
@@ -830,7 +788,6 @@
                 </div>
             </div>
 
-            <!-- Graph 2: Distribution du Stock -->
             <div class="chart-card">
                 <div class="chart-header">
                     <h5 class="chart-title">
@@ -846,7 +803,6 @@
                 </div>
             </div>
 
-            <!-- Graph 3: Performance Mensuelle -->
             <div class="chart-card">
                 <div class="chart-header">
                     <h5 class="chart-title">
@@ -862,7 +818,6 @@
                 </div>
             </div>
 
-            <!-- Graph 4: Top Clients -->
             <div class="chart-card">
                 <div class="chart-header">
                     <h5 class="chart-title">
@@ -879,30 +834,35 @@
             </div>
         </div>
 
-        <!-- Top Clients et Activité Récente -->
+        <!-- Top Products & Top Clients -->
         <div class="row g-4 mb-4">
-            <div class="col-xl-4">
+            <!-- Top Products This Month -->
+            <div class="col-xl-12">
                 <div class="modern-card">
                     <div class="modern-card-header">
                         <h5 class="modern-card-title">
-                            <i class="fas fa-trophy text-warning"></i>
-                            Top 5 Clients
+                            <i class="fas fa-fire text-orange"></i>
+                            Produits les Plus Vendus ce Mois
                         </h5>
+                        <span class="badge-modern badge-orange-gradient">
+                            {{ $totalSalesThisMonth }} ventes
+                        </span>
                     </div>
-                    @if ($topClients->count() > 0)
-                        @foreach ($topClients as $index => $client)
-                            <div class="top-client-item">
-                                <div class="rank-badge">{{ $index + 1 }}</div>
-                                <div class="client-avatar me-3">
-                                    {{ strtoupper(substr($client->name, 0, 1)) }}
+                    @if ($topProductsThisMonth->count() > 0)
+                        @foreach ($topProductsThisMonth as $index => $sortie)
+                            <div class="top-product-item">
+                                <div class="product-rank">{{ $index + 1 }}</div>
+                                <div class="product-icon">
+                                    <i class="fas fa-box"></i>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h6 class="mb-0 fw-bold">{{ $client->name }}</h6>
-                                    <small class="text-muted">{{ $client->credits_count }} crédit(s)</small>
+                                    <h6 class="mb-0 fw-bold">{{ $sortie->product->name ?? '—' }}</h6>
+                                    <small class="text-muted">{{ $sortie->total_sold }} vendu(s)</small>
                                 </div>
                                 <div class="text-end">
                                     <div class="fw-bold text-success">
-                                        {{ number_format($client->credits_sum_amount / 1000, 1) }}K DH</div>
+                                        {{ number_format($sortie->total_sold * ($sortie->product->price ?? 0), 2) }} DH
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -914,8 +874,51 @@
                     @endif
                 </div>
             </div>
-
-            <div class="col-xl-8">
+        </div>
+        <div class="row g-4 mb-4">
+            <!-- Top Clients This Month -->
+            <div class="col-xl-12">
+                <div class="modern-card">
+                    <div class="modern-card-header">
+                        <h5 class="modern-card-title">
+                            <i class="fas fa-star text-primary"></i>
+                            Meilleurs Clients ce Mois
+                        </h5>
+                        <span class="badge-modern badge-primary-gradient">
+                            {{ $totalClientsThisMonth }} clients
+                        </span>
+                    </div>
+                    @if ($topClientsThisMonth->count() > 0)
+                        @foreach ($topClientsThisMonth as $index => $client)
+                            <div class="top-client-item">
+                                <div class="rank-badge">{{ $index + 1 }}</div>
+                                <div class="client-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0 fw-bold">{{ $client->name ?? '—' }}</h6>
+                                    <small class="text-muted">{{ $client->credits_count ?? 0 }} crédit(s)</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold text-success">
+                                        {{ number_format($client->credits_sum_amount ?? 0, 2) }} DH
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Aucune donnée disponible</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+        <!-- Activity & Alerts -->
+        <div class="row g-4 mb-4">
+            <!-- Recent Activity -->
+            <div class="col-xl-6">
                 <div class="modern-card">
                     <div class="modern-card-header">
                         <h5 class="modern-card-title">
@@ -950,7 +953,7 @@
                                     <i class="fas fa-exchange-alt"></i>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h6 class="mb-1 fw-bold">Sortie stock - {{ $movement->product->marque }}</h6>
+                                    <h6 class="mb-1 fw-bold">Sortie - {{ $movement->product->marque }}</h6>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <small class="text-muted">{{ $movement->created_at->diffForHumans() }}</small>
                                         <span class="badge-modern badge-info-gradient">
@@ -963,10 +966,8 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Produits en Alerte et Sorties -->
-        <div class="row g-4 mb-4">
+            <!-- Alert Products -->
             <div class="col-xl-6">
                 <div class="modern-card">
                     <div class="modern-card-header">
@@ -1023,78 +1024,24 @@
                     @endif
                 </div>
             </div>
-
-            <div class="col-xl-6">
-                <div class="modern-card">
-                    <div class="modern-card-header">
-                        <h5 class="modern-card-title">
-                            <i class="fas fa-exchange-alt text-info"></i>
-                            Dernières Sorties
-                        </h5>
-                        <a href="{{ route('sorties.index') }}" class="btn btn-sm btn-modern-primary">
-                            Voir tout
-                        </a>
-                    </div>
-                    @if ($recentMovements->isEmpty())
-                        <div class="text-center py-4">
-                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Aucune sortie récente</p>
-                        </div>
-                    @else
-                        <div class="table-responsive">
-                            <table class="table table-modern">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Produit</th>
-                                        <th>Quantité</th>
-                                        <th>Client</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($recentMovements->take(5) as $movement)
-                                        <tr>
-                                            <td>
-                                                <small
-                                                    class="text-muted">{{ $movement->created_at->format('d/m') }}</small>
-                                                <div class="small">{{ $movement->created_at->format('H:i') }}</div>
-                                            </td>
-                                            <td>
-                                                <strong>{{ $movement->product->marque }}</strong>
-                                                <div class="small text-muted">{{ $movement->product->taille }}</div>
-                                            </td>
-                                            <td>
-                                                <span
-                                                    class="badge-modern badge-info-gradient">{{ $movement->quantite }}</span>
-                                            </td>
-                                            <td>{{ $movement->nom_client }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @endif
-                </div>
-            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Données pour les graphiques
             const monthlyData = @json($monthlyData);
             const allMonths = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov',
-                'Déc'];
+                'Déc'
+            ];
 
-            // 1. Graphique Évolution des Crédits (محسّن)
+            // 1. Évolution des Crédits
             const creditsCtx = document.getElementById('creditsChart').getContext('2d');
             const counts = allMonths.map(month => {
                 const data = monthlyData.find(d => d.month === month);
                 return data ? data.count : 0;
             });
 
-            // ألوان متدرجة للـ line chart
             const gradientCredits = creditsCtx.createLinearGradient(0, 0, 0, 300);
             gradientCredits.addColorStop(0, 'rgba(99, 102, 241, 0.4)');
             gradientCredits.addColorStop(1, 'rgba(99, 102, 241, 0.05)');
@@ -1131,24 +1078,15 @@
                             }
                         },
                         tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            padding: 12,
-                            titleFont: {
-                                size: 14
-                            },
-                            bodyFont: {
-                                size: 13
-                            }
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            padding: 12
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            },
-                            ticks: {
-                                stepSize: Math.max(...counts) > 10 ? Math.ceil(Math.max(...counts) / 5) : 1
+                                color: 'rgba(0,0,0,0.05)'
                             }
                         },
                         x: {
@@ -1160,26 +1098,20 @@
                 }
             });
 
-            // 2. Graphique Distribution du Stock (محسّن)
+            // 2. Distribution du Stock
             const stockCtx = document.getElementById('stockChart').getContext('2d');
             new Chart(stockCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Stock Bon', 'Stock Faible', 'Stock Épuisé'],
+                    labels: ['Stock Bon', 'Stock Faible', 'Épuisé'],
                     datasets: [{
                         data: [{{ $goodStockProducts }}, {{ $lowStockProducts }},
                             {{ $outOfStockProducts }}
                         ],
-                        backgroundColor: [
-                            'rgba(16, 185, 129, 0.9)',
-                            'rgba(245, 158, 11, 0.9)',
-                            'rgba(239, 68, 68, 0.9)'
+                        backgroundColor: ['rgba(16,185,129,0.9)', 'rgba(245,158,11,0.9)',
+                            'rgba(239,68,68,0.9)'
                         ],
-                        borderColor: [
-                            '#10b981',
-                            '#f59e0b',
-                            '#ef4444'
-                        ],
+                        borderColor: ['#10b981', '#f59e0b', '#ef4444'],
                         borderWidth: 3,
                         hoverOffset: 20
                     }]
@@ -1213,21 +1145,11 @@
                 }
             });
 
-            // 3. Graphique Performance Mensuelle (محسّن)
+            // 3. Performance Mensuelle
             const performanceCtx = document.getElementById('performanceChart').getContext('2d');
             const amounts = allMonths.map(month => {
                 const data = monthlyData.find(d => d.month === month);
                 return data ? (data.total / 1000).toFixed(1) : 0;
-            });
-
-            // ألوان متدرجة للـ bar chart
-            const barGradients = allMonths.map((_, index) => {
-                const ctx = performanceCtx;
-                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                const opacity = 0.7 + (index * 0.02);
-                gradient.addColorStop(0, `rgba(99, 102, 241, ${opacity})`);
-                gradient.addColorStop(1, `rgba(139, 92, 246, ${opacity - 0.2})`);
-                return gradient;
             });
 
             new Chart(performanceCtx, {
@@ -1237,10 +1159,9 @@
                     datasets: [{
                         label: 'Montant (k DH)',
                         data: amounts,
-                        backgroundColor: barGradients,
+                        backgroundColor: 'rgba(99, 102, 241, 0.8)',
                         borderRadius: 10,
-                        borderWidth: 0,
-                        borderSkipped: false
+                        borderWidth: 0
                     }]
                 },
                 options: {
@@ -1255,12 +1176,10 @@
                         y: {
                             beginAtZero: true,
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
+                                color: 'rgba(0,0,0,0.05)'
                             },
                             ticks: {
-                                callback: function(value) {
-                                    return value + 'K DH';
-                                }
+                                callback: value => value + 'K DH'
                             }
                         },
                         x: {
@@ -1272,29 +1191,19 @@
                 }
             });
 
-            // 4. Graphique Top Clients (محسّن)
+            // 4. Top Clients
             const clientsCtx = document.getElementById('clientsChart').getContext('2d');
             const clientNames = @json($topClients->pluck('name')->toArray());
             const clientAmounts = @json($topClients->pluck('credits_sum_amount')->toArray()).map(amount => amount / 1000);
-
-            // ألوان متدرجة للـ polar chart
-            const polarGradients = clientNames.map((_, index) => {
-                const ctx = clientsCtx;
-                const gradient = ctx.createRadialGradient(150, 150, 0, 150, 150, 150);
-                const hue = 250 - (index * 30);
-                gradient.addColorStop(0, `hsla(${hue}, 80%, 65%, 0.8)`);
-                gradient.addColorStop(1, `hsla(${hue}, 60%, 45%, 0.6)`);
-                return gradient;
-            });
 
             new Chart(clientsCtx, {
                 type: 'radar',
                 data: {
                     labels: clientNames.length > 0 ? clientNames : ['Aucun client'],
                     datasets: [{
-                        label: 'Montant des crédits (k DH)',
+                        label: 'Montant (k DH)',
                         data: clientAmounts.length > 0 ? clientAmounts : [0],
-                        backgroundColor: clientAmounts.length > 0 ? polarGradients : ['rgba(100, 116, 139, 0.3)'],
+                        backgroundColor: 'rgba(99, 102, 241, 0.3)',
                         borderColor: '#6366f1',
                         pointBackgroundColor: '#6366f1',
                         pointBorderColor: '#fff',
@@ -1320,12 +1229,10 @@
                         r: {
                             beginAtZero: true,
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
+                                color: 'rgba(0,0,0,0.1)'
                             },
                             ticks: {
-                                callback: function(value) {
-                                    return value + 'K';
-                                }
+                                callback: value => value + 'K'
                             }
                         }
                     }
